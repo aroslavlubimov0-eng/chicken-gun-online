@@ -73,7 +73,7 @@ export class GameRoom extends DurableObject {
   }
   broadcast(data, except = null) {
     const message = JSON.stringify(data);
-    for (const ws of this.ctx.getWebSockets()) if (ws !== except) { try { ws.send(message); } catch {} }
+    for (const ws of this.ctx.getWebSockets()) if (ws !== except && ws.readyState === WebSocket.OPEN) { try { ws.send(message); } catch {} }
   }
   async updateLobby(roomId) {
     try {
@@ -158,6 +158,17 @@ export class GameRoom extends DurableObject {
       const i=this.ctx.getWebSockets().indexOf(ws); p.x=-78+(Math.max(0,i)%4)*2.8; p.y=0; p.z=45+Math.floor(Math.max(0,i)/4)*2.8; p.yaw=0; p.hp=100; p.deadAt=0; p.lastShot=0;
       ws.serializeAttachment(p); ws.send(JSON.stringify({type:"respawn",hp:100,spawn:{x:p.x,y:p.y,z:p.z,yaw:p.yaw}})); this.broadcast({type:"players",players:this.players()}); return;
     }
+    if (data.type === "rename") {
+      const nextName = safeName(data.name);
+      if (nextName !== p.name) {
+        const oldName = p.name;
+        p.name = nextName;
+        ws.serializeAttachment(p);
+        this.broadcast({ type:"system", text: oldName + " теперь " + nextName });
+        this.broadcast({ type:"players", players:this.players() });
+      }
+      return;
+    }
     if (data.type === "chat") {
       const now=Date.now(); if(now-p.lastChat<650) return; p.lastChat=now; ws.serializeAttachment(p);
       const text=String(data.text||"").replace(/[<>\u0000-\u001f]/g,"").trim().slice(0,180);
@@ -165,7 +176,11 @@ export class GameRoom extends DurableObject {
     }
   }
   async webSocketClose(ws) {
-    const p=ws.deserializeAttachment();
+    const p = ws.deserializeAttachment();
+    const stillConnected = p?.clientId && this.ctx.getWebSockets().some(other => {
+      try { return other !== ws && other.readyState === WebSocket.OPEN && other.deserializeAttachment()?.clientId === p.clientId; } catch { return false; }
+    });
+    if (p && !stillConnected) this.broadcast({ type:"system", text: p.name + " вышел из игры" }, ws);
     this.broadcast({type:"players",players:this.players()},ws);
     if(p) await this.updateLobby(p.roomId);
   }
