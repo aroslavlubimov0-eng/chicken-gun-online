@@ -7,6 +7,9 @@ node_modules/
 /android/.gradle/
 /android/local.properties
 /android/app/build/
+/desktop/node_modules/
+/desktop/package-lock.json
+/desktop/release/
 /release/
 /node_modules/
 /package-lock.json
