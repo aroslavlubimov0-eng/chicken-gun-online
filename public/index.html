@@ -4,6 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <title>CHICKEN GUN — TOWN 3F · ONLINE BATTLE UPDATE</title>
+<meta name="theme-color" content="#173044">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/app-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/app-icon.svg">
 <style>
 :root{color-scheme:dark;--lime:#baf477;--glass:rgba(10,18,14,.76);--line:rgba(227,246,220,.17)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101710;color:#eff7e9;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}#game{position:fixed;inset:0;pointer-events:none}canvas{display:block;width:100%;height:100%;outline:0}#roosterPreview canvas{width:100%;height:100%}
@@ -378,7 +385,7 @@ const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.08,460);
 scene.add(camera); // Required so the camera-mounted first-person blaster is rendered.
 const isTouchDevice=matchMedia('(pointer: coarse)').matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:isTouchDevice?'low-power':'high-performance',failIfMajorPerformanceCaveat:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouchDevice?1:1.35));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouchDevice ? 0.9 : 1.35));renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=!isTouchDevice;renderer.shadowMap.type=THREE.BasicShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
 renderer.domElement.style.touchAction='none';
 const mobileControls=document.getElementById('mobile');
@@ -652,7 +659,7 @@ cgRenameBtn.addEventListener('click',()=>{const entered=prompt('Новое им�
 function cgEscape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function cgLoadRooms(){const list=document.getElementById('cgRooms');if(!list)return;list.innerHTML='<div class="cg-room-empty">Загружаю список комнат…</div>';try{const res=await fetch('/api/rooms',{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const rooms=Array.isArray(data.rooms)?data.rooms:[];if(!rooms.length){list.innerHTML='<div class="cg-room-empty">Пока нет комнат. Создай первую!</div>';return;}list.innerHTML=rooms.map(room=>`<article class="server-row"><div class="server-info"><h3>${cgEscape(room.name||'TOWN 3F')}</h3><p>Публичная комната · карта TOWN 3F</p><div class="server-meta"><span>ONLINE</span><span>${Number(room.players)||0}/${Number(room.maxPlayers)||8} ИГРОКОВ</span><span>ЕВРОПА · AUTO</span></div></div><div><span class="status-pill">${Number(room.players)>=Number(room.maxPlayers)?'ЗАПОЛНЕН':'ДОСТУПЕН'}</span><div style="height:10px"></div><button class="action-btn" data-join-room="${cgEscape(room.id)}" ${Number(room.players)>=Number(room.maxPlayers)?'disabled':''}>ВОЙТИ ↗</button></div></article>`).join('');list.querySelectorAll('[data-join-room]').forEach(btn=>btn.addEventListener('click',()=>{const room=rooms.find(r=>r.id===btn.dataset.joinRoom);if(room)cgJoinRoom(room.id,room.name);}));}catch(err){list.innerHTML='<div class="cg-room-empty"><b>Сервер пока не отвечает.</b><br>Проверь, что проект уже опубликован на Cloudflare Workers, а не открыт как локальный HTML-файл.<br><small>'+cgEscape(err.message)+'</small></div>';}}
 async function cgCreateRoom(){const name=cgGetNick();try{const res=await fetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({map:'town3f',name:`TOWN 3F · ${name}`,maxPlayers:8})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Не удалось создать комнату');await cgJoinRoom(data.room.id,data.room.name);}catch(err){flash('Ошибка сервера: '+err.message);}}
-function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}&client=${encodeURIComponent(cgGetClientId())}`;flash('Подключаюсь к '+title+'…');let ws,opened=false;try{ws=new WebSocket(url);onlineSocket=ws;}catch(e){flash('Не удалось открыть WebSocket');return;}ws.addEventListener('open',()=>{opened=true;onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}else if(m.type==='system'){cgChatLine('СИСТЕМА',m.text||'',true);}});ws.addEventListener('error',()=>{if(opened)flash('Ошибка связи с сервером.');});ws.addEventListener('close',e=>{if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(!opened)flash('Не удалось войти: возможно, комната заполнена. Проверь подключение и попробуй снова.');else if(inGame)flash(e.code===4001?'Эта вкладка заменена другой вкладкой этого браузера':'Связь с сервером потеряна');}});}
+function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}&client=${encodeURIComponent(cgGetClientId())}`;flash('Подключаюсь к '+title+'…');let ws,opened=false,openingExpired=false;try{ws=new WebSocket(url);onlineSocket=ws;}catch(e){flash('Не удалось открыть WebSocket');return;}const connectTimer=setTimeout(()=>{if(!opened&&ws.readyState===WebSocket.CONNECTING){openingExpired=true;flash('Сервер не ответил. Проверь интернет и обнови игру.');try{ws.close(4000,'Connection timeout');}catch(_){}}},12000);ws.addEventListener('open',()=>{clearTimeout(connectTimer);opened=true;onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}else if(m.type==='system'){cgChatLine('СИСТЕМА',m.text||'',true);}});ws.addEventListener('error',()=>{flash(opened?'Ошибка связи с сервером.':'Ошибка подключения к комнате. Проверь интернет.');});ws.addEventListener('close',e=>{clearTimeout(connectTimer);if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(!opened)flash(openingExpired?'Сервер не ответил за 12 секунд. Обнови игру и попробуй снова.':'Не удалось войти в комнату. Возможно, она заполнена или соединение прервалось.');else if(inGame)flash(e.code===4001?'Эта вкладка заменена другой вкладкой этого браузера':'Связь с сервером потеряна');}});}
 
 function flash(s){notice.textContent=s;notice.style.opacity=1;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.style.opacity=0,1400);}
 function setView(){thirdPerson=!thirdPerson;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;roosterBlaster.visible=true;modeEl.textContent=thirdPerson?'TPS · CHICKEN GUN':'FPS · FIRST PERSON';flash(thirdPerson?'Вид от третьего лица · оружие в лапках':'Вид от первого лица · оружие на экране');}
@@ -978,7 +985,17 @@ function makeBuildObject(id){
   if(sx<.075||sy<.075||sz<.075)return;
   collisionParts.push({minX:part.min.x,maxX:part.max.x,minY:part.min.y,maxY:part.max.y,minZ:part.min.z,maxZ:part.max.z});
  });
- g.userData.collisionParts=collisionParts;
+ // A table is open underneath: only its four legs and feet are solid.
+ if(id==='table'){
+  const legZones=[[-1.12,-.68],[-1.12,.68],[1.12,-.68],[1.12,.68]];
+  g.userData.collisionParts=collisionParts.filter(part=>{
+   const cx=(part.minX+part.maxX)/2,cz=(part.minZ+part.maxZ)/2;
+   const sx=part.maxX-part.minX,sz=part.maxZ-part.minZ;
+   return sx<=.28&&sz<=.28&&legZones.some(([lx,lz])=>Math.abs(cx-lx)<.16&&Math.abs(cz-lz)<.16);
+  });
+ }else{
+  g.userData.collisionParts=collisionParts;
+ }
  return g;
 }
 function setBuildGhostStyle(g,ghost){g.traverse(o=>{if(o.isMesh&&o.material){o.material.transparent=ghost;o.material.opacity=ghost?.53:1;o.material.depthWrite=!ghost;o.material.needsUpdate=true;}});}
@@ -1199,6 +1216,11 @@ function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.far=460;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resizePreview();});
 // Start facing into the map from the near edge.
 camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents=isTouchDevice?'auto':'none';
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+ window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(err => console.warn('PWA cache unavailable:', err)));
 }
 </script>
 </body>
