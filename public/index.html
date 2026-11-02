@@ -1017,11 +1017,11 @@ function moveGhostTo(e){if(!ghostBuild)return;const p=buildPlacementPoint(e);gho
 function selectBuildItem(id){if(selectedBuildId===id&&ghostBuild){cancelBuildSelection();return;}if(ghostBuild)scene.remove(ghostBuild);selectedBuildId=id;selectedPlacedBuild=null;draggedBuild=null;buildYaw=0;ghostBuild=makeBuildObject(id);setBuildGhostStyle(ghostBuild,true);scene.add(ghostBuild);const dirX=-Math.sin(yaw),dirZ=-Math.cos(yaw);ghostBuild.position.set(playerPos.x+dirX*5,-(ghostBuild.userData.localMinY||0),playerPos.z+dirZ*5);ghostBuild.rotation.y=buildYaw;buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.toggle('selected',b.dataset.buildItem===id));const name=buildCatalog.find(v=>v.id===id)?.name||id;setBuildStatus(`${name}: перемести курсор и нажми на землю или верх предмета, чтобы поставить. R — поворот.`);buildHint.textContent='Клик по земле или предмету сверху — поставить · перетаскивание — двигать · R — повернуть · F — закрыть';buildHint.classList.add('show');}
 function findBuildRoot(obj){let n=obj;while(n&&n!==scene){if(n.userData?.buildItem)return n;n=n.parent;}return null;}
 function buildVerticalRange(obj,y=obj.position.y){return {min:y+(obj.userData.localMinY??0),max:y+(obj.userData.localMaxY??1)};}
-function buildPartPlayerOverlap(obj,part,x,z,y){
- const playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
- const partBottom=y+part.minY,partTop=y+part.maxY;
+function buildPartPlayerOverlap(obj,part,objectX,objectZ,objectY,playerX,playerZ,playerY){
+ const playerBottom=playerY,playerTop=playerY+1.72;
+ const partBottom=objectY+part.minY,partTop=objectY+part.maxY;
  if(partTop<=playerBottom+.035||partBottom>=playerTop-.035)return false;
- const dx=playerPos.x-x,dz=playerPos.z-z,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
+ const dx=playerX-objectX,dz=playerZ-objectZ,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
  const localX=co*dx-si*dz,localZ=si*dx+co*dz,r=.43;
  const nearestX=Math.max(part.minX,Math.min(localX,part.maxX));
  const nearestZ=Math.max(part.minZ,Math.min(localZ,part.maxZ));
@@ -1030,7 +1030,7 @@ function buildPartPlayerOverlap(obj,part,x,z,y){
 }
 function buildFootprintHitsPlayer(obj,x,z,y=obj.position.y){
  const parts=obj.userData.collisionParts||[];
- for(const part of parts)if(buildPartPlayerOverlap(obj,part,x,z,y))return true;
+ for(const part of parts)if(buildPartPlayerOverlap(obj,part,x,z,y,playerPos.x,playerPos.z,playerPos.y))return true;
  return false;
 }
 function buildPartsWorldBoxes(obj,x,y,z,rotation){
@@ -1129,7 +1129,10 @@ function blocked(x,z){const r=.43;
  // player's body. A shelf or platform several metres above the ground no longer
  // creates an invisible wall at floor level.
  for(const obj of buildObjects){
-  if(buildFootprintHitsPlayer(obj,x,z,obj.position.y))return true;
+  const parts=obj.userData.collisionParts||[];
+  for(const part of parts){
+   if(buildPartPlayerOverlap(obj,part,obj.position.x,obj.position.z,obj.position.y,x,z,playerPos.y))return true;
+  }
  }
  for(const d of doors){if(d.kind==='hinge'){const dx=x-d.hingeX,dz=z-d.hingeZ,c=Math.cos(d.angle),sn=Math.sin(d.angle),lx=c*dx-sn*dz,lz=sn*dx+c*dz;if(lx> -r&&lx<d.width+r&&Math.abs(lz)<d.thickness/2+r)return true;}else if(d.value<.88&&Math.abs(x-d.worldX)<d.width/2+r&&Math.abs(z-d.worldZ)<.46)return true;}
  return false;
