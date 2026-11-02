@@ -146,6 +146,8 @@ kbd{border:1px solid #fff;background:#ffcf43;color:#173044;box-shadow:0 2px 0 #8
 /* Multiplayer HUD */
 #cgOnlineBadge{position:fixed;z-index:30;top:16px;right:18px;display:none;padding:9px 13px;border-radius:999px;background:#10281fe8;border:1px solid #baff7c88;color:#efffdb;font:900 10px/1.2 system-ui;letter-spacing:.12em;box-shadow:0 7px 24px #06220e66;pointer-events:none}
 #cgOnlineChat{position:fixed;z-index:30;left:18px;bottom:18px;width:min(330px,calc(100vw - 36px));display:none;gap:7px;pointer-events:auto;font:12px system-ui}
+#cgChatHeader{display:flex;align-items:center;justify-content:space-between;padding:0 3px;color:#eaffd4;font:900 10px system-ui;letter-spacing:.12em;text-shadow:0 1px 4px #071608}
+#cgRenameBtn{border:1px solid #d8ffb477;border-radius:7px;background:#10251eea;color:#efffdb;padding:5px 9px;font:900 10px system-ui;cursor:pointer}
 #cgOnlineMessages{max-height:150px;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:9px;border-radius:11px;background:#10251ec4;border:1px solid #d8ffb444;color:#edffdf;text-shadow:0 1px 2px #0008}
 #cgOnlineMessages div{overflow-wrap:anywhere}
 #cgOnlineChatForm{display:flex;gap:6px}
@@ -227,7 +229,8 @@ let THREE = null;
 const engineUrls = [
   'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
   'https://unpkg.com/three@0.160.0/build/three.module.js',
-  'https://esm.sh/three@0.160.0'
+  'https://esm.sh/three@0.160.0',
+  'https://esm.run/three@0.160.0'
 ];
 for (const url of (navigator.onLine === false ? [] : engineUrls)) {
   try {
@@ -574,12 +577,12 @@ const cgHp=document.getElementById('cgHp'), cgHpValue=document.getElementById('c
 function cgSetHp(value){playerHp=Math.max(0,Math.min(100,Number(value)||0));cgHpValue.textContent=String(Math.round(playerHp));cgHpFill.style.width=playerHp+'%';cgHp.classList.toggle('low',playerHp<=35);if(playerHp<=0){deathClock=0;respawnSent=false;}}
 const remotePlayers=new Map();
 const cgOnlineBadge=document.createElement('div');cgOnlineBadge.id='cgOnlineBadge';cgOnlineBadge.textContent='● ONLINE · 1/8';document.body.appendChild(cgOnlineBadge);
-const cgOnlineChat=document.createElement('div');cgOnlineChat.id='cgOnlineChat';cgOnlineChat.innerHTML='<div id="cgOnlineMessages" aria-live="polite"></div><form id="cgOnlineChatForm"><input id="cgOnlineChatInput" maxlength="120" autocomplete="off" placeholder="Сообщение… Enter"/><button type="submit">ОТПРАВИТЬ</button></form>';document.body.appendChild(cgOnlineChat);
-const cgChatMessages=document.getElementById('cgOnlineMessages'),cgChatForm=document.getElementById('cgOnlineChatForm'),cgChatInput=document.getElementById('cgOnlineChatInput');
+const cgOnlineChat=document.createElement('div');cgOnlineChat.id='cgOnlineChat';cgOnlineChat.innerHTML='<div id="cgChatHeader"><b>ОБЩИЙ ЧАТ</b><button id="cgRenameBtn" type="button">✎ ИМЯ</button></div><div id="cgOnlineMessages" aria-live="polite"></div><form id="cgOnlineChatForm"><input id="cgOnlineChatInput" maxlength="120" autocomplete="off" placeholder="Напиши сообщение… Enter"/><button type="submit">ОТПРАВИТЬ</button></form>';document.body.appendChild(cgOnlineChat);
+const cgChatMessages=document.getElementById('cgOnlineMessages'),cgChatForm=document.getElementById('cgOnlineChatForm'),cgChatInput=document.getElementById('cgOnlineChatInput'),cgRenameBtn=document.getElementById('cgRenameBtn');
 function cgOnlineStatus(){cgOnlineBadge.textContent=`● ONLINE · ${onlinePlayerCount||1}/8`;cgOnlineBadge.style.display=onlineSocket?'block':'none';cgOnlineChat.style.display=onlineSocket&&inGame?'grid':'none';}
 function cgChatLine(name,text,system=false){const row=document.createElement('div');row.textContent=system?text:`${name}: ${text}`;row.style.color=system?'#c8ff9b':'#f4ffe9';cgChatMessages.appendChild(row);while(cgChatMessages.children.length>8)cgChatMessages.firstChild.remove();cgChatMessages.scrollTop=cgChatMessages.scrollHeight;}
-function cgNameSprite(name){const canvas=document.createElement('canvas');canvas.width=320;canvas.height=76;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(18,43,27,.88)';ctx.beginPath();ctx.roundRect(4,7,312,62,18);ctx.fill();ctx.strokeStyle='#d9ff9a';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#f7ffe8';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(name||'Игрок').slice(0,18),160,39);const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sprite.scale.set(3.6,.86,1);sprite.position.y=3.15;return sprite;}
-function cgSyncRemotePlayers(players){if(!Array.isArray(players))return;const seen=new Set();for(const p of players){if(!p||!p.id||p.id===onlinePlayerId)continue;seen.add(p.id);let r=remotePlayers.get(p.id);if(!r){const model=rooster.clone(true);model.visible=true;model.scale.setScalar(.96);const tag=cgNameSprite(p.name);model.add(tag);scene.add(model);r={model,tag,target:new THREE.Vector3(p.x||0,p.y||0,p.z||0),yaw:Number(p.yaw)||0,name:p.name||'Игрок',hp:Number(p.hp??100)};remotePlayers.set(p.id,r);}r.target.set(Number(p.x)||0,Math.max(0,Number(p.y)||0),Number(p.z)||0);r.yaw=Number(p.yaw)||0;r.name=p.name||r.name;r.hp=Number(p.hp??100);r.model.visible=r.hp>0;}
+function cgNameSprite(name){const canvas=document.createElement('canvas');canvas.width=320;canvas.height=76;const ctx=canvas.getContext('2d');const draw=value=>{ctx.clearRect(0,0,320,76);ctx.fillStyle='rgba(18,43,27,.88)';ctx.beginPath();ctx.roundRect(4,7,312,62,18);ctx.fill();ctx.strokeStyle='#d9ff9a';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#f7ffe8';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(value||'Игрок').slice(0,18),160,39);};draw(name);const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sprite.scale.set(3.6,.86,1);sprite.position.y=3.15;sprite.userData.setName=value=>{draw(value);tex.needsUpdate=true;};return sprite;}
+function cgSyncRemotePlayers(players){if(!Array.isArray(players))return;const seen=new Set();for(const p of players){if(!p||!p.id||p.id===onlinePlayerId)continue;seen.add(p.id);let r=remotePlayers.get(p.id);if(!r){const model=rooster.clone(true);model.visible=true;model.scale.setScalar(.96);const tag=cgNameSprite(p.name);model.add(tag);scene.add(model);r={model,tag,target:new THREE.Vector3(p.x||0,p.y||0,p.z||0),yaw:Number(p.yaw)||0,name:p.name||'Игрок',hp:Number(p.hp??100)};remotePlayers.set(p.id,r);}r.target.set(Number(p.x)||0,Math.max(0,Number(p.y)||0),Number(p.z)||0);r.yaw=Number(p.yaw)||0;if(p.name&&p.name!==r.name){r.name=p.name;r.tag.userData.setName?.(p.name);}r.hp=Number(p.hp??100);r.model.visible=r.hp>0;}
  for(const [id,r] of remotePlayers){if(!seen.has(id)){scene.remove(r.model);r.model.traverse(o=>{if(o.isSprite&&o.material?.map)o.material.map.dispose();});remotePlayers.delete(id);}}
  onlinePlayerCount=players.length||1;cgOnlineStatus();}
 function cgUpdateRemotes(dt){for(const r of remotePlayers.values()){r.model.position.lerp(r.target,Math.min(1,dt*10));r.model.rotation.y=r.yaw+Math.PI;}}
@@ -605,10 +608,12 @@ function cgSendChat(){const text=cgChatInput.value.trim();if(!text||!onlineSocke
 cgChatForm.addEventListener('submit',e=>{e.preventDefault();cgSendChat();});
 window.addEventListener('beforeunload',()=>{try{onlineSocket?.close(1000,'page closed');}catch(_){}});
 function cgGetNick(){let value=document.getElementById('cgNick')?.value?.trim();if(!value){try{value=localStorage.getItem('cg_nick')||'';}catch(_){}}if(!value)value='Игрок'+Math.floor(100+Math.random()*900);value=value.slice(0,18);try{localStorage.setItem('cg_nick',value);}catch(_){}return value;}
+function cgGetClientId(){try{let id=localStorage.getItem('cg_client_id');if(!id){id=crypto.randomUUID?crypto.randomUUID():('cg-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));localStorage.setItem('cg_client_id',id);}return id;}catch(_){return 'cg-'+Math.random().toString(36).slice(2)+Date.now().toString(36);}}
+cgRenameBtn.addEventListener('click',()=>{const entered=prompt('Новое имя петушка (до 18 символов):',cgGetNick());if(entered===null)return;const name=entered.trim().slice(0,18);if(!name){flash('Имя не может быть пустым');return;}try{localStorage.setItem('cg_nick',name);}catch(_){}const field=document.getElementById('cgNick');if(field)field.value=name;if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){onlineSocket.send(JSON.stringify({type:'rename',name}));}else{flash('Имя сохранено: '+name);}});
 function cgEscape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function cgLoadRooms(){const list=document.getElementById('cgRooms');if(!list)return;list.innerHTML='<div class="cg-room-empty">Загружаю список комнат…</div>';try{const res=await fetch('/api/rooms',{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const rooms=Array.isArray(data.rooms)?data.rooms:[];if(!rooms.length){list.innerHTML='<div class="cg-room-empty">Пока нет комнат. Создай первую!</div>';return;}list.innerHTML=rooms.map(room=>`<article class="server-row"><div class="server-info"><h3>${cgEscape(room.name||'TOWN 3F')}</h3><p>Публичная комната · карта TOWN 3F</p><div class="server-meta"><span>ONLINE</span><span>${Number(room.players)||0}/${Number(room.maxPlayers)||8} ИГРОКОВ</span><span>ЕВРОПА · AUTO</span></div></div><div><span class="status-pill">${Number(room.players)>=Number(room.maxPlayers)?'ЗАПОЛНЕН':'ДОСТУПЕН'}</span><div style="height:10px"></div><button class="action-btn" data-join-room="${cgEscape(room.id)}" ${Number(room.players)>=Number(room.maxPlayers)?'disabled':''}>ВОЙТИ ↗</button></div></article>`).join('');list.querySelectorAll('[data-join-room]').forEach(btn=>btn.addEventListener('click',()=>{const room=rooms.find(r=>r.id===btn.dataset.joinRoom);if(room)cgJoinRoom(room.id,room.name);}));}catch(err){list.innerHTML='<div class="cg-room-empty"><b>Сервер пока не отвечает.</b><br>Проверь, что проект уже опубликован на Cloudflare Workers, а не открыт как локальный HTML-файл.<br><small>'+cgEscape(err.message)+'</small></div>';}}
 async function cgCreateRoom(){const name=cgGetNick();try{const res=await fetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({map:'town3f',name:`TOWN 3F · ${name}`,maxPlayers:8})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Не удалось создать комнату');await cgJoinRoom(data.room.id,data.room.name);}catch(err){flash('Ошибка сервера: '+err.message);}}
-function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}`;flash('Подключаюсь к '+title+'…');let ws;try{ws=new WebSocket(url);}catch(e){flash('Не удалось открыть WebSocket');return;}ws.addEventListener('open',()=>{onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}});ws.addEventListener('error',()=>{flash('Ошибка подключения. Проверь публикацию Cloudflare.');});ws.addEventListener('close',e=>{if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(inGame)flash('Связь с сервером потеряна');}});}
+function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}&client=${encodeURIComponent(cgGetClientId())}`;flash('Подключаюсь к '+title+'…');let ws,opened=false;try{ws=new WebSocket(url);onlineSocket=ws;}catch(e){flash('Не удалось открыть WebSocket');return;}ws.addEventListener('open',()=>{opened=true;onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}else if(m.type==='system'){cgChatLine('СИСТЕМА',m.text||'',true);}});ws.addEventListener('error',()=>{flash('Ошибка подключения. Проверь публикацию Cloudflare.');});ws.addEventListener('close',e=>{if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(!opened)flash('Не удалось войти: возможно, комната заполнена. Проверь подключение и попробуй снова.');else if(inGame)flash(e.code===4001?'Эта вкладка заменена другой вкладкой этого браузера':'Связь с сервером потеряна');}});}
 
 function flash(s){notice.textContent=s;notice.style.opacity=1;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.style.opacity=0,1400);}
 function setView(){thirdPerson=!thirdPerson;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;modeEl.textContent=thirdPerson?'TPS · CHICKEN GUN':'FPS · FIRST PERSON';flash(thirdPerson?'Вид от третьего лица':'Вид от первого лица');}
@@ -1074,13 +1079,55 @@ function blocked(x,z){const r=.43;
 function interactDoor(){let best=null,bestDist=3.35;for(const d of doors){const cx=d.kind==='hinge'?d.hingeX+Math.cos(d.angle)*d.width*.5:d.worldX;const cz=d.kind==='hinge'?d.hingeZ-Math.sin(d.angle)*d.width*.5:d.worldZ;const dist=Math.hypot(playerPos.x-cx,playerPos.z-cz);if(dist<bestDist){best=d;bestDist=dist;}}if(!best){flash('Подойди ближе к двери');return;}best.target=best.kind==='hinge'?(best.target>.5?0:1.42):(best.target>.5?0:1);flash(best.target?'Дверь открывается · E':'Дверь закрывается · E');}
 function updateDoors(dt){for(const d of doors){const rate=Math.min(1,dt*5.8);if(d.kind==='hinge'){d.angle+=(d.target-d.angle)*rate;if(Math.abs(d.target-d.angle)<.008)d.angle=d.target;d.root.rotation.y=d.angle;}else{d.value+=(d.target-d.value)*rate;if(Math.abs(d.target-d.value)<.008)d.value=d.target;d.root.position.y=d.baseY+d.openY*d.value;}}}
 function move(dx,dz){let nx=playerPos.x+dx,nz=playerPos.z+dz;if(!blocked(nx,playerPos.z))playerPos.x=nx;if(!blocked(playerPos.x,nz))playerPos.z=nz;playerPos.x=Math.max(-112,Math.min(112,playerPos.x));playerPos.z=Math.max(-84,Math.min(84,playerPos.z));}
-function update(dt){updateDoors(dt);if(buildMode){areaEl.textContent='РЕЖИМ СТРОИТЕЛЬСТВА';coordsEl.textContent=`${Math.round(playerPos.x)} · ${Math.round(playerPos.z)}`;return;}if(playerHp<=0){deathClock+=dt;if(deathClock>=4&&!respawnSent&&onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){respawnSent=true;try{onlineSocket.send(JSON.stringify({type:'respawn'}));}catch(_){respawnSent=false;}}return;}const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let speed=(keys.ShiftLeft||keys.ShiftRight?9.2:5.8);const len=Math.hypot(forward,strafe)||1;const f=forward/len,s=strafe/len;const fx=-Math.sin(yaw),fz=-Math.cos(yaw);const rx=Math.cos(yaw),rz=-Math.sin(yaw);move((fx*f+rx*s)*speed*dt,(fz*f+rz*s)*speed*dt);
- vertical-=18*dt;playerPos.y+=vertical*dt;if(playerPos.y<=0){playerPos.y=0;vertical=0;grounded=true;}
- const moving=Math.abs(forward)+Math.abs(strafe)>0;bob+=dt*(moving?12:2);const bobY=moving&&grounded?Math.sin(bob)*.045:0;
- rooster.position.set(playerPos.x,playerPos.y,playerPos.z);rooster.rotation.y=yaw+Math.PI;rooster.userData.body.position.y=bobY;rooster.userData.body.rotation.z=moving&&grounded?Math.sin(bob*.5)*.025:0;
- if(thirdPerson){const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));const target=new THREE.Vector3(playerPos.x,playerPos.y+2.15,playerPos.z);const desired=target.clone().add(dir.clone().multiplyScalar(6.4)).add(new THREE.Vector3(0,2.2,0));camera.position.lerp(desired,1-Math.pow(.0001,dt));camera.lookAt(playerPos.x,playerPos.y+1.5,playerPos.z);}else{camera.position.set(playerPos.x,1.68+playerPos.y+bobY,playerPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);}
- areaEl.textContent=Math.abs(playerPos.x)>82?'СКЛАДЫ И ПЕРИФЕРИЯ':(Math.abs(playerPos.z)>60?'ЖИЛЫЕ КВАРТАЛЫ':'ЦЕНТР TOWN 3F');coordsEl.textContent=`${Math.round(playerPos.x)} · ${Math.round(playerPos.z)}`;
- if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){onlineSendClock+=dt;onlineIdleClock+=dt;if(onlineSendClock>=.30){onlineSendClock=0;const state={x:playerPos.x,y:playerPos.y,z:playerPos.z,yaw,thirdPerson,map:'town3f'};const prev=onlineLastSent;const moved=!prev||Math.hypot(state.x-prev.x,state.z-prev.z)>.14||Math.abs(state.y-prev.y)>.08||Math.abs(state.yaw-prev.yaw)>.055;if(moved||onlineIdleClock>=5){try{onlineSocket.send(JSON.stringify({type:'pos',...state}));onlineLastSent=state;onlineIdleClock=0;}catch(_){}}}}
+function update(dt){
+ updateDoors(dt);
+ if(playerHp<=0){
+  deathClock+=dt;
+  if(deathClock>=4&&!respawnSent&&onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){respawnSent=true;try{onlineSocket.send(JSON.stringify({type:'respawn'}));}catch(_){respawnSent=false;}}
+  return;
+ }
+ // Construction mode pauses walking, but gravity and camera updates must keep running.
+ if(!buildMode){
+  const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  const speed=(keys.ShiftLeft||keys.ShiftRight?9.2:5.8);
+  const len=Math.hypot(forward,strafe)||1,f=forward/len,side=strafe/len;
+  const fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+  move((fx*f+rx*side)*speed*dt,(fz*f+rz*side)*speed*dt);
+ }
+ vertical-=18*dt;
+ playerPos.y+=vertical*dt;
+ if(playerPos.y<=0){playerPos.y=0;vertical=0;grounded=true;}
+ const moving=!buildMode&&(keys.KeyW||keys.ArrowUp||keys.KeyS||keys.ArrowDown||keys.KeyA||keys.ArrowLeft||keys.KeyD||keys.ArrowRight);
+ bob+=dt*(moving?12:2);
+ const bobY=moving&&grounded?Math.sin(bob)*.045:0;
+ rooster.position.set(playerPos.x,playerPos.y,playerPos.z);
+ rooster.rotation.y=yaw+Math.PI;
+ rooster.userData.body.position.y=bobY;
+ rooster.userData.body.rotation.z=moving&&grounded?Math.sin(bob*.5)*.025:0;
+ if(thirdPerson){
+  const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+  const target=new THREE.Vector3(playerPos.x,playerPos.y+2.15,playerPos.z);
+  const desired=target.clone().add(dir.clone().multiplyScalar(6.4)).add(new THREE.Vector3(0,2.2,0));
+  camera.position.lerp(desired,1-Math.pow(.0001,dt));
+  camera.lookAt(playerPos.x,playerPos.y+1.5,playerPos.z);
+ }else{
+  camera.position.set(playerPos.x,1.68+playerPos.y+bobY,playerPos.z);
+  camera.rotation.order='YXZ';
+  camera.rotation.set(pitch,yaw,0);
+ }
+ areaEl.textContent=buildMode?'РЕЖИМ СТРОИТЕЛЬСТВА':(Math.abs(playerPos.x)>82?'СКЛАДЫ И ПЕРИФЕРИЯ':(Math.abs(playerPos.z)>60?'ЖИЛЫЕ КВАРТАЛЫ':'ЦЕНТР TOWN 3F'));
+ coordsEl.textContent=`${Math.round(playerPos.x)} · ${Math.round(playerPos.z)}`;
+ if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){
+  onlineSendClock+=dt;onlineIdleClock+=dt;
+  if(onlineSendClock>=.30){
+   onlineSendClock=0;
+   const state={x:playerPos.x,y:playerPos.y,z:playerPos.z,yaw,thirdPerson,map:'town3f'};
+   const prev=onlineLastSent;
+   const moved=!prev||Math.hypot(state.x-prev.x,state.z-prev.z)>.14||Math.abs(state.y-prev.y)>.08||Math.abs(state.yaw-prev.yaw)>.055;
+   if(moved||onlineIdleClock>=5){try{onlineSocket.send(JSON.stringify({type:'pos',...state}));onlineLastSent=state;onlineIdleClock=0;}catch(_){}}
+  }
+ }
 }
 function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(inGame){update(dt);cgUpdateRemotes(dt);cgOnlineStatus();if(playerBlaster.visible)playerBlaster.position.x=.39+(now<muzzleFlashUntil?-.025:0);renderer.render(scene,camera);}else{updateDoors(dt);renderer.clear();if(start.style.display!=='none')drawMenuRooster(now);}}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.far=460;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resizePreview();});
