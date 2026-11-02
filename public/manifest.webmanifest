@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "CHICKEN GUN ONLINE",
+  "short_name": "CHICKEN GUN",
+  "description": "Весёлый онлайн-шутер с петушками",
+  "start_url": "/?app=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#101710",
+  "theme_color": "#173044",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
