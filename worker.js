@@ -85,14 +85,36 @@ export class GameRoom extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
     const id = url.pathname.split("/").filter(Boolean).at(-2) || "town3f-main";
-    const sockets = this.ctx.getWebSockets();
+    const ipKey = request.headers.get("CF-Connecting-IP") || "";
+    const clientId = String(url.searchParams.get("client") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
+    const openSockets = () => this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN);
+    let sockets = openSockets();
+
+    // One live session per browser profile: opening another tab replaces the old tab
+    // instead of creating another rooster or allowing unlimited tab-based bot sessions.
+    if (clientId) {
+      for (const old of sockets) {
+        try {
+          const previous = old.deserializeAttachment();
+          if (previous?.clientId === clientId) old.close(4001, "Replaced by another tab");
+        } catch {}
+      }
+      sockets = openSockets();
+    }
+
+    // Limit simultaneous connections from one public IP as a second, basic anti-flood guard.
+    if (ipKey && sockets.filter(ws => {
+      try { return ws.deserializeAttachment()?.ipKey === ipKey; } catch { return false; }
+    }).length >= 4) return json({ error: "Слишком много подключений с одной сети. Закрой лишние вкладки." }, 429);
+
     if (sockets.length >= MAX_PLAYERS) return json({ error: "Комната заполнена" }, 409);
-    const p = { id: crypto.randomUUID().slice(0, 8), roomId:id, name:safeName(url.searchParams.get("name")), x:-78+(sockets.length%4)*2.8, y:0, z:45+Math.floor(sockets.length/4)*2.8, yaw:0, hp:100, lastShot:0, deadAt:0, lastChat:0 };
+    const p = { id: crypto.randomUUID().slice(0, 8), roomId:id, clientId, ipKey, name:safeName(url.searchParams.get("name")), x:-78+(sockets.length%4)*2.8, y:0, z:45+Math.floor(sockets.length/4)*2.8, yaw:0, hp:100, lastShot:0, deadAt:0, lastChat:0 };
     const pair = new WebSocketPair(), client = pair[0], server = pair[1];
     server.serializeAttachment(p);
     this.ctx.acceptWebSocket(server);
     server.send(JSON.stringify({ type:"welcome", id:p.id, hp:p.hp, spawn:{x:p.x,y:p.y,z:p.z,yaw:p.yaw}, players:this.players() }));
     this.broadcast({ type:"players", players:this.players() });
+    this.broadcast({ type:"system", text: p.name + " зашёл в игру" });
     await this.updateLobby(id);
     return new Response(null, { status:101, webSocket:client });
   }
