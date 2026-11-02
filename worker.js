@@ -67,7 +67,7 @@ export class GameLobby extends DurableObject {
 export class GameRoom extends DurableObject {
   constructor(ctx, env) { super(ctx, env); this.ctx = ctx; this.env = env; }
   players() {
-    return this.ctx.getWebSockets().map(ws => {
+    return this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN).map(ws => {
       try { const p = ws.deserializeAttachment(); return p && ({ id:p.id, name:p.name, x:p.x, y:p.y, z:p.z, yaw:p.yaw, hp:p.hp }); } catch { return null; }
     }).filter(Boolean);
   }
@@ -78,7 +78,7 @@ export class GameRoom extends DurableObject {
   async updateLobby(roomId) {
     try {
       await this.env.LOBBY.get(this.env.LOBBY.idFromName("global")).fetch("https://lobby/update", {
-        method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ id: roomId, players: this.ctx.getWebSockets().length })
+        method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ id: roomId, players: this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN).length })
       });
     } catch (e) { console.error("Lobby update failed", e); }
   }
