@@ -6,9 +6,46 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "node --check worker.js"
+    "check": "node --check worker.js",
+    "desktop": "electron .",
+    "desktop:build": "electron-builder --win nsis portable"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^4.0.0",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.16.1"
+  },
+  "main": "desktop/main.cjs",
+  "build": {
+    "appId": "com.chickengun.online",
+    "productName": "CHICKEN GUN ONLINE",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
