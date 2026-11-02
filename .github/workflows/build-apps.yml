@@ -48,11 +48,13 @@ jobs:
           node-version: "24"
       - name: Install desktop packaging tools
         run: npm install --no-audit --no-fund
+        working-directory: desktop
       - name: Build Windows app
-        run: npm run desktop:build
+        run: npm run build
+        working-directory: desktop
       - uses: actions/upload-artifact@v4
         with:
           name: CHICKEN-GUN-WINDOWS-EXE
-          path: release/*.exe
+          path: desktop/release/*.exe
           if-no-files-found: error
           retention-days: 14
