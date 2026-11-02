@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>CHICKEN GUN — TOWN 3F · ONLINE BATTLE UPDATE</title>
+<style>
+:root{color-scheme:dark;--lime:#baf477;--glass:rgba(10,18,14,.76);--line:rgba(227,246,220,.17)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101710;color:#eff7e9;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}#game{position:fixed;inset:0;pointer-events:none}canvas{display:block;width:100%;height:100%;outline:0}#roosterPreview canvas{width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none}.topbar{position:absolute;left:18px;top:16px;display:flex;gap:10px;align-items:center}.brand{padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:var(--glass);backdrop-filter:blur(9px);font-size:11px;font-weight:900;letter-spacing:.16em}.brand span{color:var(--lime)}.pill{padding:8px 10px;background:var(--glass);border:1px solid var(--line);border-radius:999px;color:#d5e3d0;font-size:10px;letter-spacing:.06em}
+#mission{position:absolute;top:16px;right:18px;min-width:175px;padding:11px 13px;background:var(--glass);border:1px solid var(--line);border-radius:12px;text-align:right;backdrop-filter:blur(9px)}#mission b{display:block;font-size:10px;letter-spacing:.13em;color:var(--lime)}#mission small{display:block;margin-top:5px;color:#b9c6b4;font-size:10px}
+#crosshair{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);opacity:.9}#crosshair:before,#crosshair:after{content:"";position:absolute;background:#f4ffe9;box-shadow:0 0 5px #172316}#crosshair:before{width:2px;height:18px;left:8px;top:0}#crosshair:after{height:2px;width:18px;left:0;top:8px}
+#bottom{position:absolute;left:18px;bottom:16px;display:flex;gap:8px;align-items:end}.stat{background:var(--glass);border:1px solid var(--line);border-radius:11px;padding:9px 12px;min-width:105px}.stat label{display:block;font-size:9px;color:#9dad9b;letter-spacing:.13em}.stat strong{display:block;margin-top:4px;font-size:13px}.bar{height:4px;background:#354333;border-radius:4px;margin-top:7px;overflow:hidden}.bar i{display:block;width:100%;height:100%;background:var(--lime)}
+#help{position:absolute;right:18px;bottom:16px;max-width:300px;padding:10px 12px;background:var(--glass);border:1px solid var(--line);border-radius:11px;color:#c8d3c3;font-size:10px;line-height:1.6;text-align:right}kbd{display:inline-block;padding:1px 5px;border:1px solid #73816e;border-radius:4px;color:#f3ffe7;font-size:9px;background:#263126;margin:0 1px}
+#start{position:fixed;inset:0;z-index:8;overflow:auto;color:#f4ffe9;background:radial-gradient(ellipse 42% 65% at 72% 48%,#baff54 0%,#82dc32 22%,#399c29 52%,#125327 100%);}
+#start:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(4,38,17,.46),transparent 54%,rgba(3,43,18,.16));}
+#start:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");mix-blend-mode:soft-light}
+.menu-header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:26px 4.5vw 12px}.menu-brand{font-size:17px;font-weight:1000;letter-spacing:.17em;color:#f4ffe9;text-shadow:0 2px 18px #164d21}.menu-brand span{color:#cbf37d}.menu-version{padding:8px 12px;border:1px solid #eaffd05c;border-radius:999px;background:#174d252d;color:#f4ffe0;font-size:9px;font-weight:900;letter-spacing:.14em;backdrop-filter:blur(8px)}
+.menu-layout{position:relative;z-index:2;min-height:calc(100vh - 82px);display:grid;grid-template-columns:minmax(300px,.84fr) minmax(380px,1.16fr);align-items:center;gap:2vw;padding:0 4.5vw 34px}.menu-copy{max-width:520px;padding:24px 0 34px;position:relative;z-index:3}.menu-kicker{display:inline-flex;gap:9px;align-items:center;color:#eaffd5;font-size:10px;font-weight:950;letter-spacing:.22em;text-transform:uppercase}.menu-kicker:before{content:"";width:26px;height:2px;background:#efffdc;box-shadow:0 0 10px #fff}.menu-title{font-size:clamp(48px,7.4vw,104px);font-weight:1000;line-height:.79;letter-spacing:-.09em;margin:22px 0 23px;color:#f6ffe9;text-shadow:0 8px 36px #174b2570}.menu-title span{color:#e9ffb5}.menu-desc{max-width:390px;color:#f0ffdfd9;font-size:13px;line-height:1.7;margin:0 0 27px;text-shadow:0 1px 8px #1c5a2c55}.menu-actions{display:flex;flex-direction:column;gap:10px;width:min(330px,100%)}.menu-btn{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;min-height:54px;padding:0 19px;border:1px solid #ecffd07a;border-radius:13px;background:#10491d57;color:#f6ffe9;font-size:12px;font-weight:950;letter-spacing:.15em;cursor:pointer;backdrop-filter:blur(8px);transition:transform .18s,background .18s,border-color .18s}.menu-btn:hover{transform:translateX(5px);background:#0d421d91;border-color:#f1ffda}.menu-btn.primary{background:#f0ffd9;color:#17431e;border-color:#f0ffd9;box-shadow:0 10px 32px #173f1c55}.menu-btn.primary:hover{background:#fff}.menu-btn .arrow{font-size:18px;line-height:1}.menu-foot{margin-top:25px;color:#eaffd0b5;font-size:9px;letter-spacing:.12em;line-height:1.6}.rooster-stage{position:relative;align-self:stretch;min-height:480px;display:grid;place-items:center;isolation:isolate}.rooster-stage:before{content:"";position:absolute;z-index:-1;width:min(72%,610px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#e6ff9d9c 0%,#d4ff7b4d 35%,#d4ff7b00 72%);filter:blur(7px)}.rooster-stage:after{content:"";position:absolute;z-index:-1;bottom:11%;left:17%;width:66%;height:13%;border-radius:50%;background:#174a1a45;filter:blur(24px)}#roosterPreview{position:absolute;inset:0;display:grid;place-items:center}.rooster-caption{position:absolute;bottom:10%;right:4%;color:#f5ffe8;text-align:right;text-shadow:0 2px 16px #123d20;pointer-events:none}.rooster-caption b{display:block;font-size:10px;letter-spacing:.25em}.rooster-caption small{display:block;margin-top:5px;font-size:9px;color:#efffd4c9;letter-spacing:.12em}
+#subview{position:relative;z-index:4;min-height:calc(100vh - 100px);max-width:980px;margin:0 auto;padding:20px 4.5vw 50px}.sub-head{display:flex;align-items:center;gap:16px;margin-bottom:24px}.back-btn{border:1px solid #eaffd078;background:#154e2b55;color:#f4ffe9;border-radius:10px;padding:10px 14px;font-weight:900;font-size:10px;letter-spacing:.12em;cursor:pointer}.sub-title{font-size:clamp(27px,4vw,44px);font-weight:1000;letter-spacing:-.055em;margin:0;text-shadow:0 2px 15px #164d2155}.sub-subtitle{margin:7px 0 0;color:#eaffd3c9;font-size:12px;line-height:1.6}.sub-card{border:1px solid #eeffd17a;border-radius:17px;background:linear-gradient(135deg,#0d3c24b8,#123e218a);backdrop-filter:blur(14px);box-shadow:0 18px 55px #0c391b35;padding:22px}.map-card{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center;max-width:800px}.map-preview{min-height:190px;border-radius:12px;background:linear-gradient(135deg,#9aaf80,#b3ae91 46%,#59635e);position:relative;overflow:hidden;border:1px solid #edffd04d;background-image:linear-gradient(90deg,transparent 0 18%,#343b38 18% 23%,transparent 23% 46%,#343b38 46% 52%,transparent 52% 75%,#343b38 75% 80%,transparent 80%),linear-gradient(0deg,transparent 0 27%,#343b38 27% 34%,transparent 34% 64%,#343b38 64% 71%,transparent 71%);}.map-preview:before{content:"";position:absolute;inset:9%;border:5px solid #d1c6a7;border-radius:7px;box-shadow:inset 0 0 0 2px #555c5455}.map-preview:after{content:"TOWN 3F";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:19px;font-weight:1000;letter-spacing:.16em;color:#f1ffd9;text-shadow:0 3px 12px #193e20}.map-info h3,.server-info h3,.shop-item h3{margin:0 0 8px;font-size:21px;letter-spacing:-.035em}.map-info p,.server-info p,.shop-item p{font-size:11px;line-height:1.65;color:#e8f6d6c9;margin:0 0 14px}.map-tags{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 17px}.map-tags span{padding:6px 8px;border-radius:7px;background:#eaffd51c;border:1px solid #eaffd53d;font-size:9px;color:#f3ffdf}.status-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:99px;background:#ddffb929;color:#edffd9;font-size:9px;font-weight:900;letter-spacing:.1em}.status-pill:before{content:"";width:7px;height:7px;border-radius:50%;background:#baff63;box-shadow:0 0 9px #baff63}.action-btn{border:0;border-radius:10px;padding:13px 17px;background:#f0ffd9;color:#17451d;font-size:10px;font-weight:1000;letter-spacing:.14em;cursor:pointer}.action-btn:hover{filter:brightness(1.06)}.disabled-btn{background:#d9e6d0a8;color:#4d6047;cursor:not-allowed}.shop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.shop-item{padding:17px;border:1px solid #eaffd15c;border-radius:14px;background:#103b2480;backdrop-filter:blur(10px)}.cosmetic-icon{height:94px;display:grid;place-items:center;margin-bottom:13px;border-radius:10px;background:radial-gradient(circle,#baff6b55,#eaffd00c 68%);font-size:49px}.shop-item h3{font-size:15px}.shop-item p{min-height:38px;font-size:10px}.shop-price{font-size:10px;color:#eeffd9;font-weight:900;letter-spacing:.08em;margin:10px 0}.shop-buy{width:100%;padding:10px;border:1px solid #eaffd477;border-radius:9px;background:#eaffd51c;color:#f5ffe9;font-weight:900;font-size:9px;letter-spacing:.1em;cursor:pointer}.shop-buy:hover{background:#eaffd53b}.currency{display:inline-flex;align-items:center;gap:8px;margin-left:auto;color:#f6ffdf;font-size:11px;font-weight:950;letter-spacing:.06em}.currency b{font-size:17px;color:#fff0a0}.servers-list{display:grid;gap:10px;max-width:800px}.server-row{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;border:1px solid #eaffd15c;border-radius:13px;background:#103b2485;padding:16px}.server-row h3{font-size:14px;margin:0 0 6px}.server-row p{font-size:10px;color:#e8f6d6c5;margin:0}.server-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.server-meta span{font-size:9px;color:#f0ffdf;background:#eaffd51b;padding:5px 7px;border-radius:6px}.server-note{max-width:800px;margin-top:14px;padding:13px 15px;border-left:3px solid #e6ff9d;background:#0b3a2370;color:#eaffd2;font-size:10px;line-height:1.65}.empty-server{border:1px dashed #eaffd16b;border-radius:13px;padding:18px;color:#eaffd2;font-size:11px;line-height:1.65;background:#103b244d;margin-top:10px}.menu-hidden{display:none!important}
+@media(max-width:800px){.menu-header{padding:17px 18px 4px}.menu-brand{font-size:13px}.menu-layout{min-height:calc(100vh - 57px);grid-template-columns:1fr;grid-template-rows:auto minmax(250px,42vh);gap:0;padding:12px 22px 22px;align-content:space-between}.menu-copy{padding:18px 0 0;max-width:100%}.menu-title{font-size:clamp(44px,12vw,76px);margin:14px 0 12px}.menu-desc{font-size:11px;margin-bottom:17px;max-width:350px}.menu-actions{width:min(100%,390px);display:grid;grid-template-columns:1fr 1fr;gap:8px}.menu-btn{min-height:47px;padding:0 12px;font-size:9px;letter-spacing:.1em}.menu-btn.primary{grid-column:span 2}.menu-foot{margin-top:12px;font-size:8px}.rooster-stage{min-height:250px;grid-row:2;grid-column:1}.rooster-caption{bottom:2%;right:0}.rooster-caption small{font-size:8px}#subview{min-height:calc(100vh - 60px);padding:12px 18px 35px}.map-card{grid-template-columns:1fr}.map-preview{min-height:145px}.shop-grid{grid-template-columns:1fr}.shop-item{display:grid;grid-template-columns:70px 1fr;gap:0 12px;padding:12px}.cosmetic-icon{grid-row:span 3;height:74px;margin:0;font-size:39px}.shop-item p{min-height:0}.shop-price{margin:4px 0}.shop-buy{grid-column:1/-1}.server-row{grid-template-columns:1fr}.currency{margin-left:auto}.sub-head{gap:10px;margin-bottom:17px}}
+@media(min-width:801px) and (max-height:650px){.menu-layout{min-height:calc(100vh - 60px)}.rooster-stage{min-height:390px}.menu-title{font-size:clamp(50px,7vw,82px)}.menu-desc{margin-bottom:17px}.menu-actions{gap:7px}.menu-btn{min-height:47px}.menu-foot{margin-top:14px}}
+#notice{position:absolute;left:50%;top:68%;transform:translateX(-50%);padding:8px 12px;border-radius:9px;background:rgba(8,15,10,.8);border:1px solid var(--line);color:#e8f4e3;font-size:11px;opacity:0;transition:opacity .2s;white-space:nowrap}
+#mobile{display:none;position:fixed;inset:auto 14px 18px;justify-content:space-between;align-items:end;z-index:4;pointer-events:none}.stick{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:5px;pointer-events:auto}.stick button,.mobile-actions button{width:42px;height:42px;border-radius:12px;background:rgba(12,22,14,.68);border:1px solid #d7edcf55;color:white;font-size:16px;touch-action:none}.stick .blank{visibility:hidden}.mobile-actions{display:flex;gap:7px;pointer-events:auto}.mobile-actions button{font-size:9px;width:auto;padding:0 9px}
+@media(max-width:700px){#start:after{display:none}.menu-btn{backdrop-filter:none}.sub-card,.shop-item{backdrop-filter:none}.topbar{left:10px;top:10px;gap:5px}.brand{font-size:9px;padding:8px}.pill{font-size:9px;padding:7px}#mission{right:10px;top:54px;min-width:135px;padding:8px 9px}#help{display:none}#bottom{left:10px;bottom:120px}.stat{min-width:85px;padding:8px}#mobile{display:flex}.featuregrid{grid-template-columns:1fr 1fr}}
+
+/* Build mode UI */
+#blocksToggle{display:none;position:fixed;z-index:12;left:16px;top:16px;pointer-events:auto;border:1px solid #dfffac99;border-radius:12px;padding:11px 16px;background:linear-gradient(135deg,#c9ff78,#8fdb42);color:#193d18;font:1000 11px/1 system-ui,Arial,sans-serif;letter-spacing:.13em;box-shadow:0 8px 25px #0b260c66;cursor:pointer}
+#blocksToggle:hover{filter:brightness(1.08);transform:translateY(-1px)}
+#blocksToggle kbd{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-left:7px;padding:0 5px;border:1px solid #33572d55;border-radius:5px;background:#f2ffd9;color:#294d24;font:1000 10px/1 ui-monospace,monospace;box-shadow:inset 0 -2px 0 #789e4b66}
+#blocksToggle.active{background:linear-gradient(135deg,#f3ffd8,#c7ed83);box-shadow:0 0 0 2px #eaffb844,0 8px 28px #0b260c77}
+#buildPanel{display:none;position:fixed;z-index:43;left:16px;top:60px;width:min(304px,calc(100vw - 32px));max-height:min(75vh,700px);overflow:hidden;pointer-events:auto;border:1px solid #dfffac5c;border-radius:16px;background:linear-gradient(160deg,rgba(12,31,18,.96),rgba(17,39,25,.93));box-shadow:0 18px 50px #0716089c;backdrop-filter:blur(14px);color:#f4ffe9}
+#buildPanel.open{display:flex;flex-direction:column}
+.build-head{display:flex;align-items:center;justify-content:space-between;padding:14px 15px 10px;border-bottom:1px solid #eaffd221}
+.build-head strong{font-size:12px;letter-spacing:.15em}.build-head small{display:block;color:#b9cbae;font-size:9px;letter-spacing:.06em;margin-top:4px}
+#buildClose{width:29px;height:29px;border:1px solid #eaffd244;border-radius:9px;background:#eaffd51a;color:#f5ffe9;font-size:18px;cursor:pointer}
+.build-tabbar{display:flex;padding:10px 12px 0}.build-tab{border:1px solid #cfff8359;border-bottom-color:#b9ed6c;background:#d4ff8c;color:#1d411e;border-radius:9px 9px 0 0;padding:8px 14px;font-weight:1000;font-size:9px;letter-spacing:.12em}
+#buildItems{padding:10px 12px 12px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;overscroll-behavior:contain}
+.build-item{min-width:0;min-height:68px;text-align:left;padding:9px 10px;border:1px solid #eaffd12b;border-radius:10px;background:linear-gradient(145deg,#eaffd512,#eaffd507);color:#f3ffe8;cursor:pointer;display:flex;align-items:center;gap:9px;transition:border-color .12s,background .12s,transform .12s}
+.build-item:hover{border-color:#cfff83a8;background:#dfffac1a;transform:translateY(-1px)}.build-item.selected{border-color:#d9ff8b;background:#dfffac30;box-shadow:inset 0 0 0 1px #d9ff8b35}
+.build-icon{width:34px;height:34px;flex:0 0 34px;border-radius:8px;display:grid;place-items:center;background:#eaffd51b;font-size:20px}.build-item b{display:block;font-size:10px;line-height:1.25}.build-item small{display:block;margin-top:4px;color:#b9c9b2;font-size:8px;line-height:1.25}
+.build-footer{border-top:1px solid #eaffd221;padding:10px 12px 12px}.build-status{min-height:29px;color:#d5e4ca;font-size:9px;line-height:1.5;margin:0 0 8px}.build-tools{display:flex;gap:7px}.build-tools button{flex:1;border:1px solid #eaffd14b;border-radius:8px;padding:9px 7px;background:#eaffd517;color:#f4ffe9;font-size:8px;font-weight:950;letter-spacing:.08em;cursor:pointer}.build-tools button:hover{background:#eaffd52e}.build-tools button.danger{border-color:#ff9c8a55;color:#ffd6ca}
+#buildHint{display:none;position:fixed;z-index:11;left:50%;bottom:20px;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:9px 13px;border:1px solid #dfffac55;border-radius:10px;background:#0a180fdf;color:#edffd9;font-size:10px;text-align:center;pointer-events:none;box-shadow:0 7px 22px #050a0555;white-space:normal}
+#buildHint.show{display:block}
+#game canvas{touch-action:none}
+@media(max-width:700px){#blocksToggle{left:10px;top:10px;padding:10px 13px;font-size:10px}#buildPanel{left:10px;top:58px;width:min(290px,calc(100vw - 20px));max-height:63vh}#buildItems{gap:6px;padding:8px} .build-item{min-height:62px;padding:7px}.build-icon{width:30px;height:30px;flex-basis:30px;font-size:18px}#buildHint{bottom:116px;font-size:9px}}
+
+
+/* CHICKEN GUN-inspired arcade treatment: bold, playful, bright and readable. */
+:root{color-scheme:dark;--arc-yellow:#ffd447;--arc-orange:#ff8a32;--arc-blue:#39b9ed;--arc-green:#62d43e;--arc-red:#f0544f;--arc-ink:#173044;--arc-panel:rgba(15,35,48,.88);--lime:#cfff55;--glass:rgba(12,31,43,.84);--line:rgba(234,250,255,.25)}
+html,body{font-family:"Arial Black",Inter,system-ui,sans-serif;background:#75c9ef}
+#start{background:linear-gradient(180deg,#58c5f1 0%,#b7e9ff 40%,#93dc54 40.5%,#55bd38 72%,#36952e 100%);isolation:isolate}
+#start:before{background:
+ radial-gradient(ellipse 18% 13% at 15% 15%,rgba(255,255,255,.78) 0 45%,transparent 70%),
+ radial-gradient(ellipse 22% 16% at 28% 14%,rgba(255,255,255,.72) 0 42%,transparent 68%),
+ radial-gradient(ellipse 18% 12% at 80% 21%,rgba(255,255,255,.62) 0 44%,transparent 70%),
+ radial-gradient(circle at 78% 15%,#fff5a3 0 3.5%,#ffe47a55 3.7% 8%,transparent 12%),
+ linear-gradient(180deg,rgba(27,111,164,.05),rgba(24,103,26,.18));opacity:1}
+#start:after{opacity:.19;mix-blend-mode:multiply;background-image:radial-gradient(rgba(19,66,43,.32) .8px,transparent .9px),repeating-linear-gradient(135deg,transparent 0 36px,rgba(255,255,255,.11) 37px 40px,transparent 41px 78px);background-size:9px 9px,auto}
+.menu-header{padding-top:22px}
+.menu-brand{font-size:20px;letter-spacing:.12em;color:#fff;text-shadow:-2px -2px 0 #173044,2px -2px 0 #173044,-2px 2px 0 #173044,2px 2px 0 #173044,0 5px 0 #173044,0 8px 15px #153f55a8}
+.menu-brand span{color:var(--arc-yellow)}
+.menu-version{border:2px solid #fff;background:#173c57e8;color:#fff;box-shadow:0 4px 0 #102c40;letter-spacing:.12em}
+.menu-layout{padding-bottom:42px}
+.menu-copy{padding:22px 24px 27px;border:3px solid rgba(255,255,255,.85);border-radius:24px;background:linear-gradient(145deg,rgba(17,67,67,.58),rgba(17,70,42,.42));box-shadow:0 12px 0 rgba(20,68,48,.32),0 24px 50px rgba(13,56,55,.24);backdrop-filter:blur(5px)}
+.menu-kicker{color:#fff4b6;font-size:11px;text-shadow:0 2px 3px #245a30}
+.menu-kicker:before{background:var(--arc-yellow);height:4px;width:32px;box-shadow:0 2px 0 #80532b}
+.menu-title{font-family:"Arial Black",Inter,system-ui,sans-serif;font-weight:1000;letter-spacing:-.075em;color:#fff;font-size:clamp(54px,7.5vw,108px);text-shadow:-3px -3px 0 #173044,3px -3px 0 #173044,-3px 3px 0 #173044,3px 3px 0 #173044,0 8px 0 #1c526b,0 13px 28px #17475c88}
+.menu-title span{color:var(--arc-yellow);text-shadow:-3px -3px 0 #173044,3px -3px 0 #173044,-3px 3px 0 #173044,3px 3px 0 #173044,0 8px 0 #9a4c1d,0 13px 28px #17475c88}
+.menu-desc{color:#fff;font-size:13px;font-weight:750;text-shadow:0 2px 4px #143d2e}
+.menu-actions{gap:12px}
+.menu-btn{min-height:58px;border:3px solid #fff;border-radius:15px;background:linear-gradient(180deg,#299fcd,#1679af);color:#fff;font-size:13px;letter-spacing:.13em;text-shadow:0 2px 2px #173b50;box-shadow:0 5px 0 #174a66,0 10px 22px #164e4f66;backdrop-filter:none}
+.menu-btn:hover{transform:translateY(-2px) scale(1.015);background:linear-gradient(180deg,#49c6f1,#168bc6);border-color:#fff;box-shadow:0 7px 0 #174a66,0 14px 25px #164e4f70}
+.menu-btn.primary{background:linear-gradient(180deg,#ffe77b,#ffb52e);color:#4b3514;border-color:#fff;text-shadow:0 1px #fff5c6;box-shadow:0 5px 0 #a35a1f,0 12px 28px #174e4d66}
+.menu-btn.primary:hover{background:linear-gradient(180deg,#fff39a,#ffc34b)}
+.menu-btn[data-menu="shop"]{background:linear-gradient(180deg,#ff8267,#e64b50);box-shadow:0 5px 0 #91353b,0 10px 22px #164e4f66}
+.menu-btn[data-menu="servers"]{background:linear-gradient(180deg,#6bcc4a,#349f42);box-shadow:0 5px 0 #236b32,0 10px 22px #164e4f66}
+.menu-foot{color:#fff5c6;text-shadow:0 2px 4px #164b31;font-weight:900}
+.rooster-stage{min-height:500px}
+.rooster-stage:before{width:min(76%,650px);background:radial-gradient(circle,#fff9b9 0%,#ffe35d9c 26%,#e9ff743d 52%,transparent 73%);filter:blur(2px)}
+.rooster-stage:after{bottom:10%;height:14%;background:#173f265e;filter:blur(20px)}
+.rooster-caption{right:8%;bottom:9%;padding:11px 15px;border:2px solid #fff;border-radius:12px;background:#173b55e8;box-shadow:0 4px 0 #102b3d;color:#fff}
+.rooster-caption b{font-size:11px}.rooster-caption small{color:#ffe88d;font-weight:900}
+#subview{padding-top:18px}
+.sub-title{color:#fff;text-shadow:-1px -1px 0 #173044,1px -1px 0 #173044,-1px 1px 0 #173044,1px 1px 0 #173044,0 4px 0 #174a66}
+.sub-subtitle{color:#fff;text-shadow:0 1px 3px #173044}
+.back-btn{border:2px solid #fff;background:linear-gradient(#36b7e8,#177da9);box-shadow:0 3px 0 #16445d;color:#fff}
+.sub-card{border:3px solid #fff;border-radius:18px;background:linear-gradient(145deg,rgba(16,47,64,.93),rgba(19,70,61,.91));box-shadow:0 8px 0 #16475a,0 20px 50px #143e5266}
+.shop-item{border:2px solid #f8f5df;background:linear-gradient(145deg,#1d5b65,#173d58);box-shadow:0 4px 0 #102f44}
+.cosmetic-icon{background:radial-gradient(circle,#ffdf6d99,#30a7bf55 70%);border:1px solid #fff5}
+.action-btn{border:2px solid #fff;border-radius:12px;background:linear-gradient(180deg,#ffe77b,#ffb62e);color:#3a2b15;box-shadow:0 4px 0 #a45b21;text-shadow:0 1px #fff5c8}
+.action-btn:active,.menu-btn:active,.shop-buy:active{transform:translateY(2px);box-shadow:0 2px 0 #173d50}
+.shop-buy{border:2px solid #fff;background:linear-gradient(180deg,#52c6ef,#2386bf);color:#fff;box-shadow:0 3px 0 #17506d}
+.server-row{border:2px solid #fff;border-radius:14px;background:linear-gradient(145deg,#1c5b63,#173c55);box-shadow:0 4px 0 #12364d}
+.server-note,.empty-server{border:2px solid #fff;background:#173e57e8;color:#f8ffe9;border-radius:12px}
+/* Match HUD to a cheerful arcade FPS, while keeping text readable over the map. */
+.brand{border:2px solid #fff;border-radius:10px;background:linear-gradient(140deg,#173f58,#23627a);box-shadow:0 4px 0 #102d42;color:#fff;font-size:12px;text-shadow:0 2px #102d42}
+.brand span{color:var(--arc-yellow)}
+.pill{border:2px solid #fff;background:#173e57e8;color:#fff;box-shadow:0 3px 0 #102d42}
+#mission{border:2px solid #fff;border-radius:12px;background:#173e57e8;box-shadow:0 4px 0 #102d42}
+#mission b{color:var(--arc-yellow)}#mission small{color:#e9faff}
+#bottom{gap:9px}
+.stat{border:2px solid #fff;border-radius:12px;background:#173e57e8;box-shadow:0 4px 0 #102d42}
+.stat label{color:#bfeaff;font-weight:900}.stat strong{color:#fff;text-shadow:0 1px #102d42}
+.bar{height:7px;background:#223e4a;border:1px solid #d9f5ff55}.bar i{background:linear-gradient(90deg,#49da59,#d6ec49)}
+#help{border:2px solid #fff;border-radius:12px;background:#173e57ed;color:#f5fbff;box-shadow:0 4px 0 #102d42;font-weight:800}
+kbd{border:1px solid #fff;background:#ffcf43;color:#173044;box-shadow:0 2px 0 #8b581b;font-weight:1000}
+#crosshair:before,#crosshair:after{background:#fff;box-shadow:0 0 0 1px #183c52,0 0 7px #fff}
+#notice{border:2px solid #fff;border-radius:12px;background:#173e57f0;color:#fff;box-shadow:0 4px 0 #102d42;font-weight:900}
+/* Construction UI gets the same chunky toy-game treatment. */
+#blocksToggle{border:3px solid #fff;border-radius:13px;background:linear-gradient(180deg,#ffe36b,#ffad28);color:#493014;box-shadow:0 5px 0 #9a571d,0 12px 25px #102d4266;text-shadow:0 1px #fff5c5}
+#blocksToggle kbd{border:1px solid #6b481c;background:#fff5ce;color:#3b2b17;box-shadow:0 2px 0 #9a682e}
+#blocksToggle.active{background:linear-gradient(180deg,#a6ef69,#51c54b);box-shadow:0 5px 0 #216c35,0 0 0 2px #eaffb844}
+#buildPanel{border:3px solid #fff;border-radius:17px;background:linear-gradient(155deg,rgba(17,54,75,.98),rgba(15,76,73,.97));box-shadow:0 7px 0 #143b50,0 18px 45px #071b2b99;backdrop-filter:blur(9px)}
+.build-head{border-bottom:2px solid #ffffff33}.build-head strong{color:#ffe36b;text-shadow:0 2px #1b3540}.build-head small{color:#d5f3f0}
+#buildClose{border:2px solid #fff;background:#e8544e;color:#fff;border-radius:9px;box-shadow:0 3px 0 #9e3534}
+.build-tab{border:2px solid #fff!important;background:linear-gradient(#ffe36b,#ffb62e)!important;color:#463014!important;box-shadow:0 3px 0 #a45b20}
+.build-item{border:2px solid #eafaff5c;border-radius:11px;background:linear-gradient(145deg,#245f72,#1c485f);box-shadow:0 3px 0 #12354b}
+.build-item:hover{border-color:#ffe36b;background:linear-gradient(145deg,#2d8291,#225775)}
+.build-item.selected{border-color:#ffe36b;background:linear-gradient(145deg,#426f54,#246d70);box-shadow:inset 0 0 0 1px #ffe36b,0 3px 0 #12354b}
+.build-icon{border:1px solid #fff7;background:linear-gradient(140deg,#ffd96b,#ff9e4c);color:#243e4c}
+.build-item small{color:#d1edf1}
+.build-footer{border-top:1px solid #fff3}.build-status{color:#e8f8f5}
+.build-tools button{border:2px solid #fff;background:linear-gradient(#54c8ec,#2487bf);color:#fff;box-shadow:0 3px 0 #17506b}
+.build-tools button.danger{background:linear-gradient(#ff8270,#df4e51);box-shadow:0 3px 0 #91383a}
+#buildHint{border:2px solid #fff;border-radius:12px;background:#173e57f2;color:#fff;box-shadow:0 4px 0 #102d42;font-weight:850}
+#mobile .stick button,#mobile .mobile-actions button{border:2px solid #fff;background:linear-gradient(145deg,#1b6881,#173f5c);box-shadow:0 4px 0 #102e43;color:#fff;font-weight:1000}
+#mobile .mobile-actions button:nth-child(2){background:linear-gradient(#ffe36b,#ffb62e);color:#3c2b14}
+#mobile .mobile-actions button:nth-child(3){background:linear-gradient(#ff8270,#df4e51)}
+#mobile .mobile-actions button:nth-child(4){background:linear-gradient(#68d34e,#309f43)}
+/* New in-game extras. */
+#arcadeBadge{position:absolute;left:18px;top:68px;padding:7px 11px;border:2px solid #fff;border-radius:9px;background:#e9b936;color:#263b44;box-shadow:0 4px 0 #8b561f;font-size:9px;font-weight:1000;letter-spacing:.12em}
+#arcadeBadge:before{content:"★";margin-right:7px;color:#fff;text-shadow:0 1px #8b561f}
+#miniRadar{position:absolute;right:18px;top:77px;width:112px;height:82px;border:3px solid #fff;border-radius:12px;overflow:hidden;background:linear-gradient(90deg,transparent 46%,#eaf8d8a8 47% 49%,transparent 50%),linear-gradient(0deg,transparent 46%,#eaf8d8a8 47% 49%,transparent 50%),repeating-linear-gradient(90deg,transparent 0 20px,#ffffff22 21px 22px),repeating-linear-gradient(0deg,#378d5b,#378d5b 20px,#4cae68 21px,#4cae68 22px);box-shadow:0 4px 0 #123549}
+#miniRadar:before{content:"TOWN 3F";position:absolute;left:5px;top:4px;padding:2px 4px;background:#143e53e8;border-radius:4px;color:#fff;font-size:7px;font-weight:1000;letter-spacing:.08em}
+#miniRadar:after{content:"";position:absolute;left:52%;top:50%;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#ffce3b;box-shadow:0 0 0 3px #1a3c53,0 0 10px #fff;transform:translate(-50%,-50%)}
+#weaponHud{position:absolute;right:18px;bottom:106px;display:flex;align-items:center;gap:10px;padding:9px 12px;border:2px solid #fff;border-radius:12px;background:#173e57ed;box-shadow:0 4px 0 #102d42;color:#fff}
+#weaponHud .weapon-glyph{width:34px;height:30px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(145deg,#ffe36b,#ff9e34);font-size:22px;color:#173044}
+#weaponHud b{display:block;font-size:9px;letter-spacing:.13em;color:#ffe36b}#weaponHud small{display:block;margin-top:3px;font-size:8px;color:#d6eef5;letter-spacing:.05em}
+#weaponHud em{margin-left:5px;font-style:normal;font-size:17px;font-weight:1000;color:#a7ef68}
+.offline-mode #weaponHud,.offline-mode #miniRadar,.offline-mode #arcadeBadge{display:none}
+@media(max-width:760px){.menu-layout{grid-template-columns:1fr;gap:0;padding:0 16px 30px}.menu-copy{order:2;margin-top:-4px;padding:17px;border-radius:18px}.menu-title{font-size:clamp(48px,13vw,78px);margin:15px 0}.menu-desc{font-size:11px;margin-bottom:16px}.menu-actions{width:100%;gap:8px}.menu-btn{min-height:48px}.rooster-stage{order:1;min-height:34vh;max-height:320px}.rooster-caption{right:2%;bottom:4%}.menu-header{padding:15px 16px 4px}.menu-brand{font-size:15px}.menu-version{font-size:8px;padding:6px 9px}.menu-foot{margin-top:16px;font-size:8px}#arcadeBadge{left:10px;top:60px;font-size:8px}#miniRadar{right:10px;top:104px;width:82px;height:64px}#weaponHud{right:10px;bottom:116px;padding:7px 9px;transform:scale(.9);transform-origin:bottom right}#mission{top:10px;right:10px}.topbar{left:10px;top:10px}#bottom{bottom:120px}#buildPanel{box-shadow:0 5px 0 #143b50,0 12px 30px #071b2b99}}
+@media(max-height:650px) and (min-width:761px){.menu-layout{min-height:calc(100vh - 60px)}.rooster-stage{min-height:390px}.menu-title{font-size:clamp(48px,6vw,78px)}.menu-copy{padding:16px 20px}.menu-desc{margin-bottom:16px}}
+
+
+/* Multiplayer HUD */
+#cgOnlineBadge{position:fixed;z-index:30;top:16px;right:18px;display:none;padding:9px 13px;border-radius:999px;background:#10281fe8;border:1px solid #baff7c88;color:#efffdb;font:900 10px/1.2 system-ui;letter-spacing:.12em;box-shadow:0 7px 24px #06220e66;pointer-events:none}
+#cgOnlineChat{position:fixed;z-index:30;left:18px;bottom:18px;width:min(330px,calc(100vw - 36px));display:none;gap:7px;pointer-events:auto;font:12px system-ui}
+#cgOnlineMessages{max-height:150px;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:9px;border-radius:11px;background:#10251ec4;border:1px solid #d8ffb444;color:#edffdf;text-shadow:0 1px 2px #0008}
+#cgOnlineMessages div{overflow-wrap:anywhere}
+#cgOnlineChatForm{display:flex;gap:6px}
+#cgOnlineChatInput{min-width:0;flex:1;border:1px solid #d8ffb477;border-radius:9px;background:#10251eea;color:#fff;padding:10px;font:12px system-ui;outline:none}
+#cgOnlineChatForm button{border:0;border-radius:9px;background:#baf477;color:#173a19;font:900 11px system-ui;padding:0 13px;cursor:pointer}
+.cg-room-input{width:100%;max-width:330px;padding:11px 13px;border:1px solid #eaffd15c;border-radius:10px;background:#103b2485;color:#f5ffe8;font:700 12px system-ui;outline:none;margin:8px 0 12px}
+.cg-room-tools{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 15px}
+.cg-room-tools .action-btn{margin:0}
+.cg-room-empty{padding:16px;border:1px dashed #eaffd16b;border-radius:12px;color:#eaffd2;font-size:12px;line-height:1.6}
+.cg-online-pill{display:inline-flex;align-items:center;gap:5px;color:#dcffbd;font-size:9px;font-weight:900;letter-spacing:.08em}
+@media(max-width:700px){#cgOnlineBadge{top:55px;right:10px}#cgOnlineChat{left:10px;bottom:94px;width:min(300px,calc(100vw - 20px))}}
+
+/* Minimal in-round HUD: only Blocks + health and an aiming reticle. */
+#blocksToggle{left:16px;top:16px;z-index:42}
+#cgHp{display:none;position:fixed;z-index:41;left:148px;top:16px;width:148px;height:42px;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#173e57ed;box-shadow:0 4px 0 #102d42;color:#fff;pointer-events:none}
+#cgHpHead{display:flex;align-items:center;justify-content:space-between;font:1000 10px/1 Arial,sans-serif;letter-spacing:.1em}
+#cgHpHead strong{font-size:13px;color:#d9ff62}
+#cgHpTrack{height:7px;margin-top:6px;background:#263f4b;border:1px solid #ffffff80;border-radius:8px;overflow:hidden}
+#cgHpFill{display:block;width:100%;height:100%;border-radius:8px;background:linear-gradient(90deg,#54df54,#d9f65b);transition:width .16s,background .16s}
+body.match-clean #hud .topbar,body.match-clean #mission,body.match-clean #arcadeBadge,body.match-clean #miniRadar,body.match-clean #weaponHud,body.match-clean #bottom,body.match-clean #help,body.match-clean #cgOnlineBadge,body.match-clean #cgOnlineChat{display:none!important}
+body.match-clean #crosshair{width:9px;height:9px;opacity:1;border:1.5px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #142f43,0 0 8px #fff}
+body.match-clean #crosshair:before,body.match-clean #crosshair:after{display:none}
+body.match-clean #cgHp{display:block}
+#cgHp.low #cgHpFill{background:linear-gradient(90deg,#e83c36,#ff9d40)}
+@media(max-width:700px){#blocksToggle{left:10px;top:10px}#cgHp{left:132px;top:10px;width:126px;height:40px;padding:6px 8px}#buildPanel{left:10px;top:58px;width:min(290px,calc(100vw - 20px));max-height:63vh}}
+.mobile-actions #shootMobile{background:linear-gradient(180deg,#ff8267,#df4e51);color:#fff;font-weight:1000;min-width:54px}
+#notice{z-index:44}
+.mobile-actions{max-width:190px;flex-wrap:wrap;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+ <div class="topbar"><div class="brand">CHICKEN <span>GUN</span></div><div class="pill" id="mode">АРКАДА · FPS</div></div>
+ <div id="mission"><b>АРЕНА</b><small id="area">TOWN 3F · ГОРОД</small></div>
+ <div id="arcadeBadge">ARCADE BRAWL · TOWN 3F</div>
+ <div id="miniRadar" aria-label="Мини-карта города"></div>
+ <div id="weaponHud"><span class="weapon-glyph">✦</span><span><b>TOY BLASTER</b><small>ЛКМ · ОГОНЬ</small></span><em>DEMO</em></div>
+ <div id="crosshair"></div>
+ <div id="bottom"><div class="stat"><label>ПЕТУШОК</label><strong>HP 100</strong><div class="bar"><i></i></div></div><div class="stat"><label>ПОЗИЦИЯ</label><strong id="coords">-78 · 80</strong></div></div>
+ <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> движение · мышь обзор<br><kbd>E</kbd> открыть / закрыть дверь<br><kbd>SHIFT</kbd> бег · <kbd>SPACE</kbd> прыжок<br><kbd>V</kbd> вид от третьего лица · <kbd>F</kbd> блоки · <kbd>ESC</kbd> меню</div>
+ <div id="notice">Камера переключена</div>
+</div>
+<div id="mobile"><div class="stick"><button class="blank"></button><button data-key="KeyW">▲</button><button class="blank"></button><button data-key="KeyA">◀</button><button data-key="KeyS">▼</button><button data-key="KeyD">▶</button></div><div class="mobile-actions"><button data-key="ShiftLeft">БЕГ</button><button id="shootMobile">ОГОНЬ</button><button id="jump">ПРЫЖОК</button><button id="useDoor">ДВЕРЬ</button><button id="view">ВИД</button></div></div>
+
+<button id="blocksToggle" type="button" aria-expanded="false" aria-label="Открыть строительство — клавиша F">▦ БЛОКИ <kbd>F</kbd></button>
+<div id="cgHp" aria-label="Здоровье игрока"><div id="cgHpHead"><span>HP</span><strong id="cgHpValue">100</strong></div><div id="cgHpTrack"><i id="cgHpFill"></i></div></div>
+<aside id="buildPanel" aria-label="Строительство">
+ <div class="build-head"><div><strong>СТРОИТЕЛЬСТВО</strong><small>TOWN 3F · ДЕТАЛЬНЫЕ ПРЕДМЕТЫ И СЛОИ</small></div><button id="buildClose" type="button" aria-label="Закрыть">×</button></div>
+ <div class="build-tabbar"><button class="build-tab" type="button">ПРЕДМЕТЫ</button></div>
+ <div id="buildItems"></div>
+ <div class="build-footer"><p class="build-status" id="buildStatus">Выбери предмет. Клик по земле — поставить, перетаскивание — двигать.</p><div class="build-tools"><button id="buildRotate" type="button">↻ ПОВЕРНУТЬ</button><button id="buildDelete" class="danger" type="button">УДАЛИТЬ</button></div></div>
+</aside>
+<div id="buildHint">Выбери предмет в панели и нажми на землю, чтобы поставить.</div>
+
+<div id="start">
+ <header class="menu-header"><div class="menu-brand">CHICKEN <span>GUN</span></div><div class="menu-version">ARCADE SHOOTER · TOWN 3F</div></header>
+ <main class="menu-layout" id="mainMenu">
+  <section class="menu-copy">
+   <div class="menu-kicker">АРКАДНЫЙ ШУТЕР · TOWN 3F</div>
+   <h1 class="menu-title">CHICKEN<br><span>GUN</span></h1>
+   <p class="menu-desc">Яркий аркадный город, безумные дворы, перекрёстки и складские площадки. Исследуй TOWN 3F за своего квадратного петушка!</p>
+   <nav class="menu-actions" aria-label="Главное меню">
+    <button class="menu-btn primary" data-menu="play">ИГРАТЬ <span class="arrow">↗</span></button>
+    <button class="menu-btn" data-menu="shop">МАГАЗИН <span class="arrow">＋</span></button>
+    <button class="menu-btn" data-menu="servers">СЕРВЕРЫ <span class="arrow">◎</span></button>
+   </nav>
+   <div class="menu-foot">ОНЛАЙН-АРЕНА · TOWN 3F</div>
+  </section>
+  <section class="rooster-stage" aria-label="Вращающаяся модель петушка">
+   <div id="roosterPreview"></div>
+   <div class="rooster-caption"><b>ВАШ ПЕТУШОК</b><small>ГОТОВ К ПРИКЛЮЧЕНИЯМ</small></div>
+  </section>
+ </main>
+ <section id="subview" class="menu-hidden" aria-live="polite"></section>
+</div>
+<script type="module">
+let THREE = null;
+const engineUrls = [
+  'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
+  'https://unpkg.com/three@0.160.0/build/three.module.js',
+  'https://esm.sh/three@0.160.0'
+];
+for (const url of (navigator.onLine === false ? [] : engineUrls)) {
+  try {
+    const load = import(url);
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('3D engine load timed out')), 3800));
+    THREE = await Promise.race([load, timeout]);
+    break;
+  } catch (error) { console.warn('3D engine source unavailable:', url, error); }
+}
+
+// Offline fallback: the menu and a textured first-person raycast map remain playable
+// even when the external Three.js module cannot be reached.
+function startOfflineFallback() {
+  document.body.classList.add("offline-mode");
+  const host = document.getElementById('game');
+  const canvas = document.createElement('canvas');
+  canvas.id = 'fallback3d'; host.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const previewHost = document.getElementById('roosterPreview');
+  const preview = document.createElement('canvas'); previewHost.appendChild(preview);
+  const pctx = preview.getContext('2d');
+  const start = document.getElementById('start');
+  const mainMenu = document.getElementById('mainMenu');
+  const subview = document.getElementById('subview');
+  const areaEl = document.getElementById('area');
+  const coordsEl = document.getElementById('coords');
+  const notice = document.getElementById('notice');
+  const modeEl = document.getElementById('mode');
+  const keys = Object.create(null);
+  const walls = [];
+  const doors = [];
+  let px=-78, pz=45, yaw=0, pitch=0, inGame=false, coins=1200, last=performance.now(), noticeUntil=0;
+  const fov=Math.PI*.39;
+  function resize(){const dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.max(320,Math.floor(innerWidth*dpr));canvas.height=Math.max(240,Math.floor(innerHeight*dpr));canvas.style.width='100%';canvas.style.height='100%';preview.width=Math.max(300,Math.floor(previewHost.clientWidth*dpr));preview.height=Math.max(240,Math.floor(previewHost.clientHeight*dpr));}
+  function flash(t){notice.textContent=t;notice.style.opacity='1';noticeUntil=performance.now()+1400;}
+  function line(x1,z1,x2,z2,type='plaster'){walls.push({x1,z1,x2,z2,type});}
+  function door(x,z,width,type='wood',angle=0,label='ДВЕРЬ') { const d={x,z,width,type,angle,target:angle,label};doors.push(d);return d; }
+  function rect(x,z,w,d,type='plaster',frontGap=0){
+    const x1=x-w/2,x2=x+w/2,z1=z-d/2,z2=z+d/2;
+    line(x1,z1,x2,z1,type);line(x1,z1,x1,z2,type);line(x2,z1,x2,z2,type);
+    if(frontGap>0){const half=frontGap/2;line(x1,z2,x-half,z2,type);line(x+half,z2,x2,z2,type);door(x-half+.08,z2,frontGap-.16,'wood',0,'ДОМ');}
+    else line(x1,z2,x2,z2,type);
+  }
+  // Boundary and structures use the same positions as the full 3D scene.
+  line(-114,-87,114,-87,'stone');line(-114,87,114,87,'stone');line(-114,-87,-114,87,'stone');line(114,-87,114,87,'stone');
+  const townXs=[-98,-52,0,52,98],townZs=[-72,-28,28,72];let townN=0;for(let r=0;r<townZs.length;r++)for(let c=0;c<townXs.length;c++){const w=(c===0||c===4)?19.5:(22.5+(c%2)*2.2),d=(r===0||r===3)?13.5:20;rect(townXs[c],townZs[r],w,d,townN%4===1?'stone':'plaster',1.9);townN++;}
+  rect(-96,5,12,10,'stone',1.8);rect(96,-28,22,20,'stone',2.0);rect(94,-72,17,13,'stone',1.8);rect(44,18,12,9,'wood',1.8);
+  function segHit(rx,rz,dx,dz,w){const sx=w.x2-w.x1,sz=w.z2-w.z1,den=dx*sz-dz*sx;if(Math.abs(den)<1e-8)return null;const qx=w.x1-rx,qz=w.z1-rz;const t=(qx*sz-qz*sx)/den,u=(qx*dz-qz*dx)/den;return t>0.04&&u>=0&&u<=1?t:null;}
+  function doorSegment(d){
+    const a=d.angle, endX=d.x+Math.cos(a)*d.width, endZ=d.z-Math.sin(a)*d.width;
+    return {x1:d.x,z1:d.z,x2:endX,z2:endZ,type:d.type};
+  }
+  function getHit(rayAngle){const dx=Math.sin(rayAngle),dz=-Math.cos(rayAngle);let best=1e9,hit=null;for(const w of walls){const t=segHit(px,pz,dx,dz,w);if(t!==null&&t<best){best=t;hit=w;}}for(const d of doors){if(d.lift&&d.angle>.83)continue;const t=segHit(px,pz,dx,dz,doorSegment(d));if(t!==null&&t<best){best=t;hit={...doorSegment(d),type:d.type};}}return {dist:best,hit};}
+  function pointSegDist(x,z,a){const vx=a.x2-a.x1,vz=a.z2-a.z1,l=vx*vx+vz*vz;const t=Math.max(0,Math.min(1,((x-a.x1)*vx+(z-a.z1)*vz)/(l||1)));return Math.hypot(x-(a.x1+t*vx),z-(a.z1+t*vz));}
+  function blocked(x,z){for(const w of walls)if(pointSegDist(x,z,w)<.43)return true;for(const d of doors){if(d.lift){if(d.angle<.83&&Math.abs(z-d.z)<.45&&Math.abs(x-d.x)<d.width/2+.4)return true;}else if(pointSegDist(x,z,doorSegment(d))<.43)return true;}return false;}
+  function interact(){let best=null,bd=3.2;for(const d of doors){const dd=Math.hypot(px-d.x, pz-d.z);if(dd<bd){bd=dd;best=d;}}if(!best){flash('Подойди ближе к двери');return;}best.target=best.target>.5?0:(best.lift?1:Math.PI/2);flash(best.target?'Дверь открывается · E':'Дверь закрывается · E');}
+  function drawBird(c,w,h,rot){c.clearRect(0,0,w,h);const cx=w*.52,cy=h*.51,s=Math.min(w,h)*.19;c.save();c.translate(cx,cy);c.rotate(Math.sin(rot)*.05);c.scale((.84+.16*Math.abs(Math.cos(rot))),s/100);
+    const grad=c.createLinearGradient(-50,-90,55,95);grad.addColorStop(0,'#fff4d1');grad.addColorStop(.7,'#e2c88e');grad.addColorStop(1,'#9b7041');
+    c.fillStyle='rgba(13,55,18,.28)';c.beginPath();c.ellipse(0,112,105,19,0,0,Math.PI*2);c.fill();
+    for(let i=0;i<3;i++){c.fillStyle=i%2?'#b84a32':'#8c5834';c.fillRect(-43+i*17,-66-i*3,17,52);}
+    c.fillStyle=grad;c.fillRect(-58,-12,116,104);c.fillStyle='#f4e8cb';c.fillRect(-45,2,90,78);
+    c.fillStyle='#d9aa36';for(let side of [-1,1]){c.fillRect(side*48-9,8,18,49);c.fillStyle='#f4dfac';c.fillRect(side*48-5,15,9,34);c.fillStyle='#d9aa36';}
+    c.fillStyle=grad;c.fillRect(-49,-104,98,80);c.fillStyle='#ca3028';c.fillRect(-33,-128,20,32);c.fillRect(-10,-141,21,45);c.fillRect(15,-128,20,32);c.fillRect(-34,-101,70,10);
+    c.fillStyle='#fff';for(let side of [-1,1]){c.beginPath();c.arc(side*20,-66,17,0,Math.PI*2);c.fill();c.fillStyle='#1e2520';c.beginPath();c.arc(side*22,-66,9.5,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(side*25,-71,3.5,0,Math.PI*2);c.fill();}
+    c.fillStyle='#e2a52e';c.beginPath();c.moveTo(-8,-49);c.lineTo(8,-49);c.lineTo(0,-27);c.closePath();c.fill();c.beginPath();c.moveTo(0,-28);c.lineTo(12,-19);c.lineTo(-9,-17);c.closePath();c.fill();
+    c.fillStyle='#d74d49';c.beginPath();c.ellipse(-7,-23,7,13,0,0,Math.PI*2);c.ellipse(8,-23,7,13,0,0,Math.PI*2);c.fill();
+    c.strokeStyle='#d69a28';c.lineWidth=8;for(let x of [-20,20]){c.beginPath();c.moveTo(x,85);c.lineTo(x,112);c.moveTo(x,110);c.lineTo(x-12,120);c.moveTo(x,110);c.lineTo(x+12,120);c.stroke();}
+    c.restore();}
+  let previewRot=0;
+  function renderPreview(dt){const w=preview.width,h=preview.height;previewRot+=dt*.75;drawBird(pctx,w,h,previewRot);const g=pctx.createRadialGradient(w*.5,h*.5,5,w*.5,h*.5,Math.min(w,h)*.48);g.addColorStop(0,'rgba(238,255,181,.18)');g.addColorStop(1,'rgba(238,255,181,0)');pctx.fillStyle=g;pctx.fillRect(0,0,w,h);}
+  function renderGame(){const w=canvas.width,h=canvas.height,ratio=w/Math.max(1,innerWidth);const horizon=h*(.48+pitch);const sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#8eafc0');sky.addColorStop(1,'#d4d1ad');ctx.fillStyle=sky;ctx.fillRect(0,0,w,horizon);
+    const floor=ctx.createLinearGradient(0,horizon,0,h);floor.addColorStop(0,'#777a70');floor.addColorStop(.45,'#62665f');floor.addColorStop(1,'#3f4643');ctx.fillStyle=floor;ctx.fillRect(0,horizon,w,h-horizon);
+    // Lightweight perspective street for the offline renderer: a road, pale curbs and lane dashes.
+    const vanish=horizon+3,roadBottom=w*.34,roadTop=7;
+    ctx.fillStyle='#414744';ctx.beginPath();ctx.moveTo(w*.5-roadTop,vanish);ctx.lineTo(w*.5+roadTop,vanish);ctx.lineTo(w*.5+roadBottom,h);ctx.lineTo(w*.5-roadBottom,h);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#b8b19f';ctx.beginPath();ctx.moveTo(w*.5-roadTop-4,vanish);ctx.lineTo(w*.5-roadTop,vanish);ctx.lineTo(w*.5-roadBottom-5,h);ctx.lineTo(w*.5-roadBottom-36,h);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(w*.5+roadTop,vanish);ctx.lineTo(w*.5+roadTop+4,vanish);ctx.lineTo(w*.5+roadBottom+36,h);ctx.lineTo(w*.5+roadBottom+5,h);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(239,235,207,.82)';ctx.lineWidth=Math.max(1,ratio*2);ctx.setLineDash([10*ratio,14*ratio]);ctx.beginPath();ctx.moveTo(w*.5,vanish+12);ctx.lineTo(w*.5,h);ctx.stroke();ctx.setLineDash([]);
+    // Perspective ground marks create an asphalt/concrete texture.
+    for(let y=Math.max(horizon+2,0);y<h;y+=Math.max(3,Math.floor((y-horizon)/18))){const depth=(y-horizon+4)/Math.max(1,h*.55);ctx.globalAlpha=Math.min(.18,.025+depth*.07);ctx.strokeStyle=y%2?'#b4b19f':'#373d3a';ctx.lineWidth=ratio;ctx.beginPath();for(let x=0;x<w;x+=Math.max(8,Math.floor(20*depth))){const wx=(x/w-.5)*depth*22;ctx.moveTo(x,y);ctx.lineTo(x+Math.sin(wx*14)*2*ratio,y+Math.max(1,depth*2));}ctx.stroke();}ctx.globalAlpha=1;
+    const cols=Math.min(420,Math.max(220,Math.floor(w/2)));const step=w/cols;
+    for(let i=0;i<cols;i++){const off=(i/cols-.5)*fov;const ang=yaw+off;const hit=getHit(ang);if(!hit.hit)continue;const dist=Math.max(.12,hit.dist*Math.cos(off));const slice=Math.min(h*2,h*3.5/dist);const top=horizon-slice*.5;const shade=Math.max(.35,1-dist/180);let color=hit.hit.type==='green'?[44,103,49]:hit.hit.type==='wood'?[117,82,46]:hit.hit.type==='metal'?[94,111,114]:hit.hit.type==='stone'?[137,135,119]:[190,181,158];
+      const tex=Math.sin(i*.29+dist*1.6)*.04+Math.sin(i*.071)*.035;const side=1-Math.abs(Math.sin(ang))*.22;for(let k=0;k<3;k++)color[k]=Math.max(0,Math.min(255,Math.round(color[k]*shade*side*(1+tex))));ctx.fillStyle=`rgb(${color[0]},${color[1]},${color[2]})`;ctx.fillRect(i*step,top,step+1,slice);
+      ctx.globalAlpha=.22;ctx.strokeStyle=hit.hit.type==='wood'?'#3e2717':'#f4ebd4';ctx.lineWidth=Math.max(1,step*.55);ctx.beginPath();ctx.moveTo(i*step,top+slice*.18);ctx.lineTo(i*step,top+slice*.82);ctx.stroke();ctx.globalAlpha=1;
+      if((i%5)===0){ctx.fillStyle='rgba(20,31,20,.12)';ctx.fillRect(i*step,top+slice*.7,step*4,slice*.025);}
+    }
+    // Tiny aiming reticle.
+    ctx.strokeStyle='rgba(248,255,236,.9)';ctx.lineWidth=2*ratio;ctx.beginPath();ctx.moveTo(w/2-8*ratio,h/2);ctx.lineTo(w/2+8*ratio,h/2);ctx.moveTo(w/2,h/2-8*ratio);ctx.lineTo(w/2,h/2+8*ratio);ctx.stroke();
+  }
+  function update(dt){if(!inGame){renderPreview(dt);return;}for(const d of doors){const rate=Math.min(1,dt*5.5);d.angle+=(d.target-d.angle)*rate;if(Math.abs(d.target-d.angle)<.01)d.angle=d.target;}
+    const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),side=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);const speed=(keys.ShiftLeft||keys.ShiftRight?7.5:4.6)*dt;const len=Math.hypot(forward,side)||1;const dx=(Math.sin(yaw)*forward+Math.cos(yaw)*side)/len*speed,dz=(-Math.cos(yaw)*forward+Math.sin(yaw)*side)/len*speed;if(!blocked(px+dx,pz))px+=dx;if(!blocked(px,pz+dz))pz+=dz;px=Math.max(-112,Math.min(112,px));pz=Math.max(-84,Math.min(84,pz));
+    areaEl.textContent=Math.abs(px)>82?'СКЛАДЫ И ПЕРИФЕРИЯ':(Math.abs(pz)>60?'ЖИЛЫЕ КВАРТАЛЫ':'ЦЕНТР TOWN 3F');coordsEl.textContent=`${Math.round(px)} · ${Math.round(pz)}`;renderGame();if(performance.now()>noticeUntil)notice.style.opacity='0';
+  }
+  function openPage(title,body){mainMenu.classList.add('menu-hidden');subview.classList.remove('menu-hidden');subview.innerHTML=`<div class="sub-head"><button class="back-btn" data-back>← НАЗАД</button><div><h2 class="sub-title">${title}</h2><p class="sub-subtitle">Версия с локальным резервным рендерером.</p></div></div><div class="sub-card">${body}</div>`;}
+  function startGame(){inGame=true;start.style.display='none';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');px=-78;pz=45;yaw=0;pitch=0;flash('TOWN 3F · нажми E возле двери');canvas.focus?.();}
+  document.querySelectorAll('[data-menu]').forEach(b=>b.addEventListener('click',()=>{const which=b.dataset.menu;if(which==='play')openPage('ВЫБОР КАРТЫ','<h3>TOWN 3F</h3><p class="map-info">Большая городская карта с дорогами, перекрёстками, магазинами, дворами и складом.</p><button class="action-btn" id="launchMap">ИГРАТЬ НА TOWN 3F ↗</button>');else if(which==='shop')openPage('МАГАЗИН',`<h3>ПЕТУШОК · КОСМЕТИКА</h3><p>Демо-монеты: ${coins}. В резервном режиме внешний 3D-магазин недоступен.</p>`);else openPage('СЕРВЕРЫ','<h3>ЛОКАЛЬНАЯ ТРЕНИРОВКА</h3><p>Доступна одиночная комната. Онлайн-серверы требуют отдельного игрового сервера.</p><span class="status-pill">ДОСТУПЕН</span><button class="action-btn" id="joinLocal" style="margin-left:12px">ВОЙТИ ↗</button>');}));
+  subview.addEventListener('click',e=>{if(e.target.closest('[data-back]')){subview.classList.add('menu-hidden');mainMenu.classList.remove('menu-hidden');}if(e.target.id==='launchMap'||e.target.id==='joinLocal')startGame();});
+  document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat)interact();if(e.code==='Escape'&&inGame){inGame=false;start.style.display='block';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');}});
+  document.addEventListener('keyup',e=>keys[e.code]=false);
+  document.addEventListener('mousemove',e=>{if(inGame&&document.pointerLockElement===canvas){yaw+=e.movementX*.0022;pitch=Math.max(-.12,Math.min(.12,pitch-e.movementY*.0005));}});
+  canvas.addEventListener('click',()=>{if(inGame&&canvas.requestPointerLock)canvas.requestPointerLock();});
+  document.getElementById('useDoor').addEventListener('click',interact);
+  document.getElementById('view').addEventListener('click',()=>flash('Резервный режим · вид от первого лица'));
+  document.getElementById('jump').addEventListener('click',()=>flash('Прыжок доступен в полной 3D-версии'));
+  document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));});
+  let touch=null;canvas.addEventListener('touchstart',e=>{if(!inGame||!e.touches.length)return;touch={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});canvas.addEventListener('touchmove',e=>{if(!touch||!e.touches.length)return;const t=e.touches[0];yaw-=(t.clientX-touch.x)*.006;pitch=Math.max(-.12,Math.min(.12,pitch-(t.clientY-touch.y)*.0007));touch={x:t.clientX,y:t.clientY};},{passive:true});canvas.addEventListener('touchend',()=>touch=null,{passive:true});
+  function frame(now){const dt=Math.min(.04,(now-last)/1000);last=now;update(dt);requestAnimationFrame(frame);}resize();addEventListener('resize',resize);requestAnimationFrame(frame);
+  const warning=document.createElement('div');warning.className='server-note';warning.style.margin='18px 4.5vw';warning.textContent='Автономный режим: внешний 3D-движок недоступен. Для полной детализации подключите интернет и перезагрузите файл.';document.getElementById('start').appendChild(warning);
+}
+
+let webglAvailable = false;
+try { const probe=document.createElement('canvas'); webglAvailable=!!(probe.getContext('webgl2',{failIfMajorPerformanceCaveat:false})||probe.getContext('webgl',{failIfMajorPerformanceCaveat:false})); } catch (_) {}
+if (!THREE || !webglAvailable) {
+  console.error(!THREE ? 'Three.js could not be loaded from any configured CDN. Starting offline renderer.' : 'WebGL is unavailable. Starting offline renderer.');
+  startOfflineFallback();
+} else {
+
+const mount=document.getElementById('game');
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x82d5f6);scene.fog=new THREE.Fog(0xa8e0f1,145,360);
+const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.08,460);
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.BasicShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xe5faff,0x77834d,2.45));
+const sun=new THREE.DirectionalLight(0xffe18a,2.85);sun.position.set(-48,100,54);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-140;sun.shadow.camera.right=140;sun.shadow.camera.top=120;sun.shadow.camera.bottom=-120;sun.shadow.normalBias=.04;scene.add(sun);
+
+const mats={};function mat(name,color,rough=.88,metal=0){return mats[name]=new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
+mat('grass',0x72bd42);mat('grass2',0x8bd14d);mat('earth',0xb18d58);mat('concrete',0xa8a99f);mat('wall',0xf0d8a9);mat('wall2',0xc98160);mat('dark',0x344655);mat('roof',0x4b6482);mat('roof2',0x3f81a5);mat('wood',0x9b6139);mat('wood2',0xc28649);mat('metal',0x6693a9,.52,.32);mat('glass',0x5aa9c6,.25,.18);mat('trim',0xffedc7);mat('greenwall',0x319842);mat('greenwall2',0x59b94a);mat('fence',0xa8bb55);mat('red',0xef514c);mat('white',0xfff7e6);mat('black',0x172c3a);mat('gold',0xffb72f);mat('pink',0xf27488);mat('comb',0xe63d45);mat('feather',0xffe8bb);mat('shadow',0x3b342b);
+// Procedural tileable materials: no image downloads or external texture files are needed.
+function makeSurfaceTexture(kind, base, repeatX=2, repeatY=2) {
+ const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,512,512);
+ let seed=kind.split('').reduce((a,ch)=>a+ch.charCodeAt(0),0)+23;
+ const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+ if(kind==='grass'||kind==='field'){
+  for(let i=0;i<9000;i++){const px=rnd()*512,py=rnd()*512,r=.4+rnd()*2.2;x.fillStyle=['rgba(26,57,23,.18)','rgba(190,197,116,.18)','rgba(218,207,139,.12)','rgba(48,91,33,.2)'][i%4];x.fillRect(px,py,r*1.7,r*.5);}
+  for(let i=0;i<1400;i++){const px=rnd()*512,py=rnd()*512;x.strokeStyle=rnd()>.5?'rgba(30,73,28,.28)':'rgba(205,215,129,.25)';x.lineWidth=.7+rnd()*1.2;x.beginPath();x.moveTo(px,py);x.lineTo(px+(rnd()-.5)*4,py-2-rnd()*7);x.stroke();}
+ } else if(kind==='dirt'){
+  for(let i=0;i<6200;i++){const px=rnd()*512,py=rnd()*512,r=1+rnd()*5;x.fillStyle=rnd()>.5?'rgba(48,37,24,.17)':'rgba(227,204,156,.19)';x.beginPath();x.ellipse(px,py,r,r*.45,rnd()*Math.PI,0,Math.PI*2);x.fill();}
+  for(let i=0;i<90;i++){const py=rnd()*512;x.strokeStyle='rgba(55,42,26,.12)';x.beginPath();x.moveTo(0,py);x.lineTo(512,py+(rnd()-.5)*18);x.stroke();}
+ } else if(kind==='plaster'||kind==='stone'){
+  for(let i=0;i<6000;i++){const px=rnd()*512,py=rnd()*512,r=.5+rnd()*2.8;x.fillStyle=rnd()>.5?'rgba(46,43,35,.10)':'rgba(255,249,224,.18)';x.fillRect(px,py,r,r);}
+  if(kind==='stone'){x.strokeStyle='rgba(74,68,55,.22)';x.lineWidth=3;for(let row=0;row<8;row++){let y=row*64;x.beginPath();x.moveTo(0,y);x.lineTo(512,y);x.stroke();for(let col=0;col<4;col++){let xx=col*128+(row%2)*64;x.beginPath();x.moveTo(xx,y);x.lineTo(xx,y+64);x.stroke();}}}
+ } else if(kind==='wood'){
+  for(let row=0;row<24;row++){const y=row*22+(rnd()*8);x.strokeStyle=row%2?'rgba(36,21,12,.28)':'rgba(226,185,130,.2)';x.lineWidth=1+rnd()*2;x.beginPath();x.moveTo(0,y);x.bezierCurveTo(130,y-4,350,y+5,512,y-2);x.stroke();}
+  for(let i=0;i<15;i++){const px=rnd()*512,py=rnd()*512;x.strokeStyle='rgba(35,22,13,.24)';x.beginPath();x.ellipse(px,py,4+rnd()*12,2+rnd()*4,0,0,Math.PI*2);x.stroke();}
+ } else if(kind==='metal'){
+  for(let row=0;row<90;row++){const y=row*6;x.strokeStyle=row%2?'rgba(245,250,246,.12)':'rgba(20,29,30,.19)';x.lineWidth=1;x.beginPath();x.moveTo(0,y);x.lineTo(512,y);x.stroke();}
+  for(let i=0;i<130;i++){const px=rnd()*512,py=rnd()*512;x.fillStyle='rgba(28,35,35,.22)';x.fillRect(px,py,1+rnd()*3,1+rnd()*2);}
+ } else if(kind==='roof'){
+  for(let row=0;row<12;row++){for(let col=-1;col<9;col++){const xx=col*64+(row%2)*32,yy=row*44;x.fillStyle=row%2?'rgba(220,229,232,.1)':'rgba(13,22,27,.18)';x.fillRect(xx+2,yy+2,61,40);x.strokeStyle='rgba(17,26,32,.35)';x.strokeRect(xx+2,yy+2,61,40);x.strokeStyle='rgba(232,238,235,.18)';x.beginPath();x.moveTo(xx+5,yy+4);x.lineTo(xx+5,yy+37);x.stroke();}}
+ } else if(kind==='asphalt'){
+  for(let i=0;i<7200;i++){const px=rnd()*512,py=rnd()*512,r=.4+rnd()*1.6;x.fillStyle=rnd()>.5?'rgba(8,13,13,.18)':'rgba(207,210,197,.10)';x.fillRect(px,py,r,r);}
+  for(let i=0;i<25;i++){const px=rnd()*512,py=rnd()*512;x.strokeStyle='rgba(20,25,23,.18)';x.lineWidth=1+rnd()*2;x.beginPath();x.moveTo(px,py);x.lineTo(px+(rnd()-.5)*32,py+(rnd()-.5)*16);x.stroke();}
+ } else if(kind==='tiles'){
+  for(let row=0;row<16;row++){for(let col=0;col<16;col++){const xx=col*32,yy=row*32;x.fillStyle=(row+col)%2?'rgba(255,248,222,.16)':'rgba(54,58,48,.08)';x.fillRect(xx+1,yy+1,30,30);x.strokeStyle='rgba(61,63,54,.24)';x.lineWidth=1;x.strokeRect(xx+1,yy+1,30,30);}}
+ } else if(kind==='brick'){
+  for(let row=0;row<18;row++){const y=row*29;x.strokeStyle='rgba(54,35,27,.24)';x.lineWidth=2;x.beginPath();x.moveTo(0,y);x.lineTo(512,y);x.stroke();for(let col=0;col<8;col++){const xx=col*68+(row%2)*34;x.beginPath();x.moveTo(xx,y);x.lineTo(xx,y+29);x.stroke();}}
+  for(let i=0;i<1300;i++){x.fillStyle=rnd()>.5?'rgba(241,205,169,.08)':'rgba(48,33,26,.09)';x.fillRect(rnd()*512,rnd()*512,1+rnd()*2,1+rnd()*2);}
+ } else if(kind==='green'){
+  for(let row=0;row<30;row++){const y=row*18;x.fillStyle=row%2?'rgba(197,220,148,.08)':'rgba(12,44,17,.12)';x.fillRect(0,y,512,5);}
+  for(let i=0;i<900;i++){x.fillStyle=rnd()>.5?'rgba(13,47,18,.14)':'rgba(195,225,146,.1)';x.fillRect(rnd()*512,rnd()*512,1+rnd()*3,1+rnd()*6);}
+ }
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(repeatX,repeatY);tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());tex.needsUpdate=true;return tex;
+}
+function setTexture(name,kind,base,rx,ry){const m=mats[name];m.map=makeSurfaceTexture(kind,base,rx,ry);m.color.set(0xffffff);m.needsUpdate=true;}
+
+// TOWN 3F — broad low-poly city map, laid out from the supplied reference image.
+// Reused geometries and a conservative draw distance keep the large map lightweight.
+mat('asphalt',0x48545c);mat('sidewalk',0xd4cdb8);mat('brick',0xd27e5e);mat('roofRust',0xb46b3c);mat('roofBlue',0x3f8dbb);mat('bluePaint',0x36a6d1);mat('containerRed',0xef554a);mat('containerBlue',0x288bc3);mat('containerOlive',0x86b43b);mat('windowLight',0x75c5df);mat('trafficYellow',0xffc536);mat('signWhite',0xfff4d5);mat('leaf',0x71bd43);
+setTexture('grass','grass','#72bd48',30,24);setTexture('earth','dirt','#b3925e',12,12);setTexture('concrete','tiles','#d6ceb9',16,12);setTexture('wall','plaster','#f0d9ad',3,2);setTexture('wall2','brick','#cb8060',3,2);setTexture('roof','roof','#536b87',5,4);setTexture('roof2','roof','#b87548',5,4);setTexture('wood','wood','#98603b',3,2);setTexture('wood2','wood','#bd854b',3,2);setTexture('metal','metal','#6795ad',3,2);setTexture('asphalt','asphalt','#48545c',30,22);setTexture('sidewalk','tiles','#d8d1be',12,8);
+mats.roofRust.color.setHex(0xb87548);mats.roofBlue.color.setHex(0x3f8dbb);
+
+const boxGeometryCache=new Map(),cylinderGeometryCache=new Map(),sphereGeometryCache=new Map();
+function cachedBox(w,h,d){const key=[w,h,d].map(v=>Number(v).toFixed(3)).join('|');if(!boxGeometryCache.has(key))boxGeometryCache.set(key,new THREE.BoxGeometry(w,h,d));return boxGeometryCache.get(key);}
+function box(parent,x,y,z,w,h,d,material,cast=true,receive=true){const m=new THREE.Mesh(cachedBox(w,h,d),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=receive;parent.add(m);return m;}
+function cyl(parent,x,y,z,r1,r2,h,material,seg=10){const key=[r1,r2,h,seg].map(v=>Number(v).toFixed(3)).join('|');if(!cylinderGeometryCache.has(key))cylinderGeometryCache.set(key,new THREE.CylinderGeometry(r1,r2,h,seg));const m=new THREE.Mesh(cylinderGeometryCache.get(key),material);m.position.set(x,y,z);m.castShadow=false;m.receiveShadow=true;parent.add(m);return m;}
+function sphere(parent,x,y,z,rx,ry,rz,material,seg=12){const key=[rx,ry,rz,seg].map(v=>Number(v).toFixed(3)).join('|');if(!sphereGeometryCache.has(key)){const geo=new THREE.SphereGeometry(1,seg,Math.max(6,Math.floor(seg*.65)));geo.scale(rx,ry,rz);sphereGeometryCache.set(key,geo);}const m=new THREE.Mesh(sphereGeometryCache.get(key),material);m.position.set(x,y,z);m.castShadow=false;m.receiveShadow=true;parent.add(m);return m;}
+function addLabel(text,x,y,z){const c=document.createElement('canvas');c.width=384;c.height=72;const ctx=c.getContext('2d');ctx.fillStyle='rgba(24,29,27,.84)';ctx.fillRect(4,4,376,64);ctx.strokeStyle='rgba(240,229,199,.75)';ctx.lineWidth=3;ctx.strokeRect(4,4,376,64);ctx.font='bold 26px Arial';ctx.textAlign='center';ctx.fillStyle='#fff1d2';ctx.fillText(text,192,47);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(6.5,1.2),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));mesh.position.set(x,y,z);mesh.rotation.x=-.12;scene.add(mesh);return mesh;}
+function makePlane(w,d,x,y,z,material){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),material);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);mesh.receiveShadow=true;scene.add(mesh);return mesh;}
+
+const colliders=[];const doors=[];
+function addCollider(x,z,w,d){colliders.push({x,z,w,d});}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(232,178),mats.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;scene.add(ground);
+// Beige concrete perimeter walls and simple skyline beyond them.
+function boundary(){const h=4.8;box(scene,0,h/2,-87,230,h,1.35,mats.wall2,false);box(scene,0,h/2,87,230,h,1.35,mats.wall2,false);box(scene,-115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,0,h+.08,-87,230,.18,1.5,mats.trim,false);box(scene,0,h+.08,87,230,.18,1.5,mats.trim,false);box(scene,-115,h+.08,0,1.5,.18,176,mats.trim,false);box(scene,115,h+.08,0,1.5,.18,176,mats.trim,false);addCollider(0,-87,230,1.5);addCollider(0,87,230,1.5);addCollider(-115,0,1.5,176);addCollider(115,0,1.5,176);for(let x=-112;x<=112;x+=7){for(const z of [-87,87])box(scene,x,2.45,z,.22,4.95,1.5,mats.wall,false);}for(let z=-84;z<=84;z+=7){for(const x of [-115,115])box(scene,x,2.45,z,1.5,4.95,.22,mats.wall,false);}}
+boundary();
+
+// A clear street grid with sidewalks, curbs, lane dashes and crosswalks.
+const verticalRoads=[-78,-26,26,78],horizontalRoads=[-58,0,58],ROAD=12.5,FOOT=3.25;
+function roadVertical(x){makePlane(ROAD,174,x,.012,0,mats.asphalt);for(const side of [-1,1]){const sx=x+side*(ROAD/2+FOOT/2);makePlane(FOOT,174,sx,.025,0,mats.sidewalk);box(scene,sx-side*FOOT/2,.1,0,.18,.18,174,mats.trim,false);}for(let z=-82;z<=82;z+=12)box(scene,x,.04,z,.16,.035,4.4,mats.white,false);}
+function roadHorizontal(z){makePlane(230,ROAD,0,.013,z,mats.asphalt);for(const side of [-1,1]){const sz=z+side*(ROAD/2+FOOT/2);makePlane(230,FOOT,0,.026,sz,mats.sidewalk);box(scene,0,.1,sz-side*FOOT/2,230,.18,.18,mats.trim,false);}for(let x=-108;x<=108;x+=12)box(scene,x,.045,z,4.2,.035,.16,mats.white,false);}
+verticalRoads.forEach(roadVertical);horizontalRoads.forEach(roadHorizontal);
+// Crosswalks at the main junctions.
+for(const x of verticalRoads)for(const z of horizontalRoads){for(let i=-3;i<=3;i++){box(scene,x+i*1.35,.055,z-5.55,.72,.028,1.05,mats.white,false);box(scene,x+i*1.35,.055,z+5.55,.72,.028,1.05,mats.white,false);}}
+// Small painted parking bays near shops and the warehouse row.
+function parkingLot(x,z,w=18,d=10){makePlane(w,d,x,.035,z,mats.asphalt);for(let i=-Math.floor(w/2)+2;i<Math.floor(w/2)-1;i+=3.2){box(scene,x+i,.055,z+d*.25,.08,.025,d*.47,mats.white,false);}}
+parkingLot(-96,-44,22,10);parkingLot(96,43,24,10);parkingLot(50,-44,22,10);
+
+function wallSeg(g,x,y,z,w,h,d,material=mats.wall){box(g,x,y,z,w,h,d,material);}
+function makeGableRoof(g,cx,cy,cz,w,depth,material=mats.roof){const ridge=cy+1.65,eave=cy+.12;const verts=[-w/2,eave,-depth/2,w/2,eave,-depth/2,0,ridge,-depth/2,-w/2,eave,depth/2,w/2,eave,depth/2,0,ridge,depth/2];const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,.5,1,0,0,.5,1,1,0],2));geo.setIndex([0,1,2,3,5,4,0,3,4,0,4,1,1,4,5,1,5,2]);geo.computeVertexNormals();const roofMat=new THREE.MeshStandardMaterial({color:material.color,map:material.map||null,roughness:.9,side:THREE.DoubleSide});const m=new THREE.Mesh(geo,roofMat);m.position.set(cx,0,cz);m.castShadow=false;m.receiveShadow=true;g.add(m);box(g,0,ridge,0,.12,.12,depth+.1,mats.dark,false);}
+function windowUnit(g,x,y,z,w=1.35,h=1.05){box(g,x,y,z,w,h,.11,mats.trim,false);box(g,x,y,z+.07,w-.18,h-.18,.055,mats.windowLight,false);box(g,x,y,z+.11,.065,h-.18,.035,mats.trim,false);box(g,x,y,z+.11,w-.18,.065,.035,mats.trim,false);box(g,x,y-h*.58,z+.08,w+.18,.12,.28,mats.wood2,false);}
+function townBuilding({x,z,w=22,d=18,h=4.2,style=0,name='МАГАЗИН',roof=mats.roof}){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const t=.32,opening=Math.min(2.1,w*.18),side=(w-opening)/2;const wallMat=style%4===1?mats.wall2:(style%4===2?mats.white:mats.wall);const roofMat=style%4===1?mats.roof2:(style%4===2?mats.roofBlue:roof);
+ box(g,0,.14,0,w+.45,.28,d+.45,mats.concrete,false);box(g,0,.31,0,w-.4,.1,d-.4,mats.dark,false);
+ wallSeg(g,0,h/2,-d/2,w,h,t,wallMat);wallSeg(g,-w/2,h/2,0,t,h,d,wallMat);wallSeg(g,w/2,h/2,0,t,h,d,wallMat);
+ wallSeg(g,-(opening/2+side/2),h/2,d/2,side,h,t,wallMat);wallSeg(g,(opening/2+side/2),h/2,d/2,side,h,t,wallMat);wallSeg(g,0,h-.35,d/2,opening,.7,t,wallMat);
+ // Front entrance, frame, and a working hinged door.
+ box(g,-opening/2,1.12,d/2+.2,.12,2.24,.14,mats.wood2,false);box(g,opening/2,1.12,d/2+.2,.12,2.24,.14,mats.wood2,false);box(g,0,2.28,d/2+.2,opening+.12,.13,.14,mats.wood2,false);
+ const leafW=opening-.15,hinge=new THREE.Group();hinge.position.set(-opening/2+.075,0,d/2+.22);g.add(hinge);box(hinge,leafW/2,1.06,0,leafW,2.08,.12,style%4===3?mats.metal:mats.wood,false);box(hinge,leafW/2,1.08,.07,leafW-.16,.04,.018,mats.wood2,false);sphere(hinge,leafW-.16,1.08,.13,.055,.055,.055,mats.gold,8);doors.push({kind:'hinge',root:hinge,hingeX:x-opening/2+.075,hingeZ:z+d/2+.22,width:leafW,thickness:.16,angle:0,target:0,label:'ДВЕРЬ · '+name});
+ // Window rows and façade trim.
+ const winCount=Math.max(1,Math.floor((w-4)/5));for(let i=0;i<winCount;i++){const wx=-w/2+3.1+i*((w-6.2)/Math.max(1,winCount-1));if(Math.abs(wx)<opening/2+1.3)continue;windowUnit(g,wx,2.55,d/2+.18,1.45,1.12);}
+ for(const wx of [-w*.28,w*.28]){box(g,wx,2.35,-d/2-.18,1.5,1.05,.12,mats.trim,false);box(g,wx,2.35,-d/2-.25,1.3,.86,.05,mats.windowLight,false);}
+ // Roof styles: flat parapets, tiled gables and industrial shed roofs.
+ if(style%4===1){makeGableRoof(g,0,h,d/2-.02,w+.65,d+.55,roofMat);}else{box(g,0,h+.16,0,w+.65,.35,d+.65,roofMat,false);box(g,0,h+.36,0,w+.35,.12,d+.35,mats.dark,false);if(style%4===3){for(let i=-Math.floor(w/2)+1;i<w/2;i+=2.2)box(g,i,h+.42,0,.09,.09,d+.25,mats.metal,false);}}
+ // Rooftop vents, tanks and air-conditioning units.
+ box(g,-w*.28,h+.62,-d*.22,1.35,.62,1.0,mats.metal,false);box(g,-w*.28,h+.96,-d*.22,1.42,.08,1.05,mats.trim,false);if(style%3===0){cyl(g,w*.27,h+.78,-d*.2,.55,.55,.7,mats.metal,10);cyl(g,w*.27,h+1.16,-d*.2,.62,.62,.08,mats.dark,10);}
+ // Sidewalk step and a painted shop sign.
+ box(g,0,.19,d/2+.85,Math.min(4.2,w*.4),.22,.95,mats.sidewalk,false);
+ if(name){const c=document.createElement('canvas');c.width=256;c.height=64;const cx=c.getContext('2d');cx.fillStyle=['#f1a92f','#278dbd','#e75b50','#29995d'][style%4];cx.fillRect(0,0,256,64);cx.fillStyle='#fff0cf';cx.font='bold 25px Arial';cx.textAlign='center';cx.fillText(name.slice(0,15),128,41);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w*.56,6.2),1.55),new THREE.MeshBasicMaterial({map:tex,transparent:false}));sign.position.set(0,h*.68,d/2+.23);g.add(sign);}
+ // Wall-only collision leaves the entrance and interior passable.
+ addCollider(x,z-d/2,w,t);addCollider(x-w/2,z,t,d);addCollider(x+w/2,z,t,d);addCollider(x-(opening/2+side/2),z+d/2,side,t);addCollider(x+(opening/2+side/2),z+d/2,side,t);
+ return g;
+}
+
+// Twenty varied buildings form four rows of dense blocks, with generous streets between them.
+const xLots=[-98,-52,0,52,98],zLots=[-72,-28,28,72];
+const buildingNames=['MARKET','GARAGE','CAFE','WORKSHOP','TOWN HALL','STORE','MOTEL','DEPOT','BAKERY','CLINIC','BLOCK 03','WAREHOUSE'];
+let buildingIndex=0;
+for(let r=0;r<zLots.length;r++)for(let c=0;c<xLots.length;c++){
+ const x=xLots[c],z=zLots[r],w=(c===0||c===4)?19.5:(22.5+(c%2)*2.2),d=(r===0||r===3)?13.5:19.5+(r%2)*1.8,h=3.9+(buildingIndex%4)*.42,style=buildingIndex%4;
+ townBuilding({x,z,w,d,h,style,name:buildingNames[buildingIndex%buildingNames.length]});
+ buildingIndex++;
+}
+// Small annexes and service sheds tucked into selected courtyards.
+function smallShed(x,z,w=7,d=5,color=mats.roof2){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,0,.12,0,w,.24,d,mats.concrete,false);box(g,0,1.35,-d/2,w,2.7,.25,mats.wall2,false);box(g,-w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,-w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,0,2.85,0,w+.35,.35,d+.35,color,false);addCollider(x,z-d/2,w,.3);addCollider(x-w/2,z,.3,d);addCollider(x+w/2,z,.3,d);addCollider(x-w*.32,z+d/2,w*.36,.3);addCollider(x+w*.32,z+d/2,w*.36,.3);}
+smallShed(-91,-27,8,6);smallShed(-48,25,7,6);smallShed(44,-28,8,6);smallShed(91,27,8,6);
+
+// Industrial container yard and a stepped orange cargo stack, inspired by the reference screenshot.
+function container(x,z,color=mats.containerRed,level=0){const g=new THREE.Group();g.position.set(x,level*2.65,z);scene.add(g);box(g,0,1.25,0,6.2,2.5,2.55,color,false);for(let i=-2;i<=2;i++){box(g,i*1.15,1.25,1.3,.075,2.36,.06,mats.metal,false);box(g,i*1.15,1.25,-1.3,.075,2.36,.06,mats.metal,false);}for(const xx of [-3.05,3.05])for(const zz of [-1.25,1.25])box(g,xx,1.25,zz,.12,2.5,.12,mats.trim,false);box(g,0,2.52,0,6.22,.08,2.58,mats.dark,false);}
+container(92,-44,mats.containerBlue);container(99,-44,mats.containerRed,1);container(106,-44,mats.containerOlive);container(92,-40,mats.containerRed);container(99,-40,mats.containerBlue,1);
+// Orange stacked cargo crates near the centre-right block.
+function cargoCrate(x,z,size=3,color=mats.trafficYellow){box(scene,x,size/2,z,size,size,size,color,false);box(scene,x-size*.28,size/2,z+size*.505,.12,size*.92,.08,mats.wood2,false);box(scene,x+size*.28,size/2,z+size*.505,.12,size*.92,.08,mats.wood2,false);box(scene,x,size*.72,z+size*.51,size*.9,.1,.08,mats.wood2,false);}
+cargoCrate(43,45,3.8);cargoCrate(47,45,3.1);cargoCrate(45,48.5,2.7);cargoCrate(42,48.5,2.2);
+
+// Low-poly trees, lamp posts, fences, vehicles and street furniture.
+function cityTree(x,z,scale=1){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);cyl(g,0,1.35,0,.22,.14,2.7,mats.wood2,7);const crown=new THREE.Mesh(new THREE.ConeGeometry(1.25,2.6,6),new THREE.MeshStandardMaterial({color:0x69bd43,roughness:1}));crown.position.y=3.15;crown.castShadow=false;g.add(crown);const top=new THREE.Mesh(new THREE.ConeGeometry(.92,1.75,6),new THREE.MeshStandardMaterial({color:0x91d34c,roughness:1}));top.position.set(.05,4.05,0);g.add(top);}
+function streetLamp(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cyl(g,0,3.5,0,.09,.14,7,mats.metal,7);box(g,.4,6.65,0,.95,.1,.12,mats.metal,false);box(g,.78,6.5,0,.42,.22,.34,mats.trafficYellow,false);sphere(g,.78,6.37,0,.17,.12,.17,mats.white,8);}
+function parkedCar(x,z,color=0x9b4b38,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;scene.add(g);const bodyMat=new THREE.MeshStandardMaterial({color,roughness:.72});box(g,0,.68,0,3.6,.85,1.8,bodyMat,false);box(g,0,1.25,-.12,2.15,.85,1.52,mats.windowLight,false);box(g,0,1.7,.68,2.4,.12,.12,mats.trim,false);for(const sx of [-1,1])for(const sz of [-.62,.62]){const w=cyl(g,sx*1.15,.42,sz,.42,.42,.2,mats.dark,10);w.rotation.z=Math.PI/2;}box(g,-1.55,.72,.92,.42,.18,.08,mats.gold,false);box(g,1.55,.72,.92,.42,.18,.08,mats.red,false);}
+function lowFence(x1,z1,x2,z2){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz),count=Math.max(1,Math.floor(len/2));for(let i=0;i<=count;i++){const t=i/count;box(scene,x1+dx*t,.62,z1+dz*t,.13,1.24,.13,mats.wood2,false);}const a=Math.atan2(dz,dx);for(const y of [.38,.94]){const rail=box(scene,(x1+x2)/2,y,(z1+z2)/2,len,.11,.11,mats.wood,false);rail.rotation.y=-a;}}
+for(const p of [[-105,-48,-88,-48],[-62,-48,-39,-48],[36,-48,65,-48],[-106,48,-89,48],[40,48,67,48],[85,48,108,48]])lowFence(...p);
+for(const p of [[-105,-46],[-73,-45],[-29,-45],[29,-45],[73,-45],[105,-45],[-105,45],[-73,45],[-29,45],[29,45],[73,45],[105,45]])cityTree(p[0],p[1],.75+(Math.abs(p[0])%3)*.08);
+for(const p of [[-83,-48],[-21,-48],[31,-48],[83,-48],[-83,48],[-21,48],[31,48],[83,48],[-83,-10],[-21,12],[31,-10],[83,12]])streetLamp(p[0],p[1]);
+parkedCar(-91,-44,0x667d77,Math.PI/2);parkedCar(-98,-44,0x8c4c37,Math.PI/2);parkedCar(91,43,0x4e7189,Math.PI/2);parkedCar(98,43,0x9c8a55,Math.PI/2);parkedCar(51,-44,0x766b5b,0);parkedCar(-52,44,0x8d4237,0);parkedCar(44,44,0x657e6f,Math.PI/2);parkedCar(-48,-44,0x8b8e87,Math.PI/2);
+
+// Distinct city landmarks: water tank, bus shelter, small plaza and traffic lights.
+const waterTower=new THREE.Group();waterTower.position.set(-96,0,43);scene.add(waterTower);cyl(waterTower,0,4.4,0,.22,.28,8,mats.metal,8);cyl(waterTower,0,8.8,0,2.2,2.2,2.5,mats.metal,10);cyl(waterTower,0,10.1,0,2.35,2.35,.22,mats.trim,10);box(waterTower,0,6.1,0,4.1,.12,.12,mats.metal,false);
+const shelter=new THREE.Group();shelter.position.set(-96,0,-44);scene.add(shelter);box(shelter,0,1.3,0,5.5,.16,2.2,mats.wood2,false);for(const x of [-2.5,2.5])for(const z of [-.9,.9])box(shelter,x,.95,z,.12,1.9,.12,mats.metal,false);box(shelter,0,2.35,0,6,.2,2.7,mats.roofBlue,false);box(shelter,0,1.2,-.85,4.2,1.2,.08,mats.windowLight,false);
+// A broad central intersection plaza with planters and a low fountain.
+makePlane(18,18,0,.04,-44,mats.sidewalk);for(const a of [0,Math.PI/2,Math.PI,Math.PI*1.5]){const xx=Math.cos(a)*7,zz=-44+Math.sin(a)*7;box(scene,xx,.25,zz,2.1,.5,2.1,mats.wood2,false);cityTree(xx,zz,.48);}
+cyl(scene,0,.22,-44,2.2,2.2,.42,mats.concrete,12);cyl(scene,0,.62,-44,.32,.32,.42,mats.windowLight,10);sphere(scene,0,.98,-44,.24,.24,.24,mats.white,10);
+
+// A few light palms and low silhouettes beyond the city wall.
+function palm(x,z,s=1){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);scene.add(g);cyl(g,0,3.0,0,.25,.17,6,mats.wood2,7);for(let i=0;i<6;i++){const a=i*Math.PI/3;const leaf=new THREE.Mesh(new THREE.ConeGeometry(.3,4.7,5),new THREE.MeshStandardMaterial({color:i%2?0x437b42:0x5d8b45,roughness:1}));leaf.position.set(Math.cos(a)*1.55,5.7,Math.sin(a)*1.55);leaf.rotation.z=-Math.cos(a)*.85;leaf.rotation.x=Math.sin(a)*.85;g.add(leaf);}}
+for(let i=0;i<10;i++){palm(-127-i*4,-100-(i%3)*3,.7+(i%3)*.08);palm(124+i*4,-98-(i%4)*3,.75+(i%3)*.07);}
+addLabel('TOWN 3F · ЦЕНТР',0,10,-10);addLabel('СКЛАДСКОЙ РАЙОН',96,9,-55);addLabel('ГОРОДСКОЙ КВАРТАЛ',-52,9,14);
+
+// Detailed stylised rooster character model. Procedural geometry, no external model files.
+function makeRooster(){
+ const root=new THREE.Group(),body=new THREE.Group();root.add(body);
+ // Squared body, broad wings and a chunky cube head.
+ box(body,0,1.05,0,1.28,1.12,1.12,mats.white,false);
+ box(body,0,.94,.575,.92,.82,.08,mats.feather,false);
+ for(const side of [-1,1]){const wing=box(body,side*.69,1.17,-.03,.28,.76,.82,mats.gold,false);wing.rotation.z=side*-.12;box(body,side*.7,1.12,.34,.2,.1,.35,mats.wood2,false);}
+ box(body,0,2.07,.34,1.08,.98,.9,mats.white,false);
+ box(body,0,1.94,.80,.78,.68,.07,mats.feather,false);
+ // Huge expressive eyes with glossy pupils and bright reflections.
+ for(const side of [-1,1]){sphere(body,side*.275,2.17,.83,.255,.285,.16,mats.white,16);sphere(body,side*.275,2.16,.966,.132,.16,.075,mats.black,14);sphere(body,side*.235,2.225,1.025,.045,.055,.025,mats.white,10);}
+ // Red square comb with three rounded-looking blocks.
+ box(body,-.27,2.67,.28,.25,.32,.25,mats.comb,false);box(body,0,2.75,.28,.29,.42,.27,mats.comb,false);box(body,.27,2.67,.28,.25,.32,.25,mats.comb,false);box(body,0,2.54,.28,.72,.16,.27,mats.comb,false);
+ // Bright orange beak, cheek wattles and a small lower beak.
+ const beak=new THREE.Mesh(new THREE.ConeGeometry(.22,.42,5),mats.gold);beak.position.set(0,1.99,1.03);beak.rotation.x=Math.PI/2;beak.castShadow=false;body.add(beak);box(body,0,1.81,1.01,.22,.09,.16,mats.trafficYellow,false);
+ for(const side of [-1,1])sphere(body,side*.14,1.73,.88,.09,.18,.09,mats.pink,10);
+ // Three blocky tail feathers and two yellow legs with wide feet.
+ for(let i=-1;i<=1;i++){const tail=box(body,i*.19,1.65,-.67,.18,.72,.2,i===0?mats.comb:mats.wood2,false);tail.rotation.x=-.35;tail.rotation.z=i*.22;}
+ for(const side of [-1,1]){box(body,side*.31,.28,.04,.14,.48,.14,mats.gold,false);box(body,side*.31,.075,.27,.48,.12,.52,mats.gold,false);box(body,side*.31,.075,.48,.18,.1,.32,mats.trafficYellow,false);}
+ root.userData.body=body;return root;
+}
+
+// Bright low-poly toy blaster viewmodel for the arcade-shooter feel (visual only).
+const blasterMaterials={
+ body:new THREE.MeshStandardMaterial({color:0x219ed0,roughness:.48,metalness:.12}),
+ yellow:new THREE.MeshStandardMaterial({color:0xffc83f,roughness:.5}),
+ orange:new THREE.MeshStandardMaterial({color:0xff7438,roughness:.5}),
+ dark:new THREE.MeshStandardMaterial({color:0x243d4c,roughness:.62,metalness:.18}),
+ glass:new THREE.MeshStandardMaterial({color:0x7df0dd,emissive:0x1b806e,emissiveIntensity:.35,roughness:.25})
+};
+const playerBlaster=new THREE.Group();
+box(playerBlaster,0,0,0,.32,.22,.5,blasterMaterials.body,false,false);
+box(playerBlaster,0,.13,-.04,.24,.07,.39,blasterMaterials.yellow,false,false);
+box(playerBlaster,0,-.18,.13,.2,.3,.21,blasterMaterials.orange,false,false);
+box(playerBlaster,0,-.29,.18,.23,.07,.27,blasterMaterials.dark,false,false);
+const blasterBarrel=cyl(playerBlaster,0,.015,-.36,.075,.075,.44,blasterMaterials.dark,10);blasterBarrel.rotation.x=Math.PI/2;
+const blasterMuzzle=cyl(playerBlaster,0,.015,-.59,.105,.105,.09,blasterMaterials.orange,10);blasterMuzzle.rotation.x=Math.PI/2;
+const blasterInner=cyl(playerBlaster,0,.015,-.645,.061,.061,.015,blasterMaterials.dark,10);blasterInner.rotation.x=Math.PI/2;
+box(playerBlaster,-.19,.015,-.02,.08,.14,.22,blasterMaterials.orange,false,false);
+box(playerBlaster,.19,.015,-.02,.08,.14,.22,blasterMaterials.orange,false,false);
+box(playerBlaster,0,.19,-.12,.12,.07,.13,blasterMaterials.glass,false,false);
+box(playerBlaster,0,.18,-.38,.13,.07,.11,blasterMaterials.yellow,false,false);
+const blasterLight=new THREE.PointLight(0x75e7d8,.45,2.2);blasterLight.position.set(0,.18,-.3);playerBlaster.add(blasterLight);
+const blasterFlash=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:0xffdf63,transparent:true,opacity:.95}));blasterFlash.position.set(0,.02,-.72);blasterFlash.visible=false;playerBlaster.add(blasterFlash);
+playerBlaster.position.set(.39,-.34,-.78);playerBlaster.rotation.set(-.045,-.12,-.035);camera.add(playerBlaster);
+
+const rooster=makeRooster();rooster.scale.setScalar(.96);rooster.position.set(-78,0,45);scene.add(rooster);
+// The menu mascot is drawn on a tiny 2D canvas to avoid creating a second WebGL context.
+const previewMount=document.getElementById('roosterPreview');const previewCanvas=document.createElement('canvas');previewCanvas.setAttribute('aria-hidden','true');previewMount.appendChild(previewCanvas);const previewCtx=previewCanvas.getContext('2d');let previewRotation=0;
+function resizePreview(){const w=Math.max(1,previewMount.clientWidth),h=Math.max(1,previewMount.clientHeight),dpr=Math.min(devicePixelRatio||1,1.35);previewCanvas.width=Math.round(w*dpr);previewCanvas.height=Math.round(h*dpr);previewCanvas.style.width='100%';previewCanvas.style.height='100%';}
+function drawMenuRooster(now){const c=previewCtx,w=previewCanvas.width,h=previewCanvas.height;if(!w||!h)return;c.clearRect(0,0,w,h);const sx=w/Math.max(1,previewMount.clientWidth),sy=h/Math.max(1,previewMount.clientHeight);c.save();c.scale(sx,sy);const cx=previewMount.clientWidth*.51,cy=previewMount.clientHeight*.51,scale=Math.min(previewMount.clientWidth,previewMount.clientHeight)*.34;previewRotation+=.012;c.translate(cx,cy);c.rotate(Math.sin(now*.0006)*.055);c.scale((.83+.17*Math.abs(Math.cos(previewRotation))),1);c.scale(scale/100,scale/100);
+ // Soft ground shadow and a subtle circular platform.
+ c.fillStyle='rgba(15,64,20,.24)';c.beginPath();c.ellipse(0,116,92,17,0,0,Math.PI*2);c.fill();c.fillStyle='rgba(239,255,187,.2)';c.beginPath();c.ellipse(0,108,78,12,0,0,Math.PI*2);c.fill();
+ // Tail blocks behind the body.
+ for(let i=-1;i<=1;i++){c.save();c.translate(i*18,-7);c.rotate(i*.23-.18);c.fillStyle=i===0?'#bd302b':'#8f5432';c.fillRect(-9,-87,18,63);c.fillStyle='rgba(255,255,255,.22)';c.fillRect(-6,-83,4,54);c.restore();}
+ // Feet and legs.
+ c.fillStyle='#d99b25';for(const x of [-25,25]){c.fillRect(x-5,68,10,34);c.fillRect(x-20,96,39,9);c.fillRect(x-20,103,18,7);c.fillRect(x+3,103,17,7);}
+ // Main square body with shaded side planes.
+ const bodyGrad=c.createLinearGradient(-50,-10,54,75);bodyGrad.addColorStop(0,'#fff5d6');bodyGrad.addColorStop(.55,'#e7d7b4');bodyGrad.addColorStop(1,'#bca37b');c.fillStyle=bodyGrad;c.fillRect(-53,-4,106,93);c.fillStyle='rgba(111,76,38,.18)';c.fillRect(39,-4,14,93);c.fillStyle='rgba(255,255,255,.32)';c.fillRect(-49,0,8,85);
+ // Blocky side wings.
+ c.fillStyle='#d9ae4d';c.fillRect(-69,18,20,49);c.fillRect(49,18,20,49);c.fillStyle='#f0d58d';c.fillRect(-65,25,9,31);c.fillRect(56,25,9,31);
+ // Large squared head.
+ const headGrad=c.createLinearGradient(-42,-93,44,-35);headGrad.addColorStop(0,'#fff7db');headGrad.addColorStop(.6,'#e7d5ad');headGrad.addColorStop(1,'#bda57f');c.fillStyle=headGrad;c.fillRect(-47,-91,94,76);c.fillStyle='rgba(105,73,37,.16)';c.fillRect(35,-91,12,76);c.fillStyle='rgba(255,255,255,.32)';c.fillRect(-43,-87,7,66);
+ // Bright red, block-shaped comb.
+ c.fillStyle='#c92f2b';c.fillRect(-35,-111,20,25);c.fillRect(-10,-124,22,38);c.fillRect(16,-111,20,25);c.fillRect(-37,-91,74,10);c.fillStyle='#ff7260';c.fillRect(-30,-108,5,15);c.fillRect(-5,-120,6,23);c.fillRect(21,-108,5,15);
+ // Oversized white eyes, round glossy pupils, and highlights.
+ for(const x of [-19,19]){c.fillStyle='#fff';c.beginPath();c.arc(x,-60,19,0,Math.PI*2);c.fill();c.strokeStyle='rgba(73,57,40,.28)';c.lineWidth=2;c.stroke();c.fillStyle='#17211d';c.beginPath();c.arc(x+2,-59,10.5,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(x+5,-64,4,0,Math.PI*2);c.fill();}
+ // Orange beak and red wattles.
+ c.fillStyle='#f0a52c';c.beginPath();c.moveTo(-13,-39);c.lineTo(13,-39);c.lineTo(0,-17);c.closePath();c.fill();c.fillStyle='#d97822';c.beginPath();c.moveTo(-8,-20);c.lineTo(9,-20);c.lineTo(0,-8);c.closePath();c.fill();c.fillStyle='#cf4541';c.fillRect(-10,-8,8,23);c.fillRect(3,-8,8,23);
+ c.restore();}
+resizePreview();
+
+// The playable character is the rooster. In FPS mode the mesh is hidden; V shows it in third person.
+const startPos=new THREE.Vector3(-78,0,45);let playerPos=startPos.clone();let yaw=0;let pitch=-.04;let thirdPerson=false;let vertical=0;let grounded=true;let jumpTime=0;let bob=0;const keys={};let locked=false;let lastTime=performance.now();
+const start=document.getElementById('start');const mainMenu=document.getElementById('mainMenu');const subview=document.getElementById('subview');const areaEl=document.getElementById('area');const coordsEl=document.getElementById('coords');const modeEl=document.getElementById('mode');const notice=document.getElementById('notice');let noticeTimer;let inGame=false;let demoCoins=1200;const ownedCosmetics=new Set();
+// Online multiplayer state: positions, player presence and room chat are authoritative on Cloudflare Durable Objects.
+let onlineSocket=null, onlineRoomId=null, onlineRoomTitle='', onlinePlayerId=null, onlineSendClock=0, onlineIdleClock=0, onlineLastSent=null, onlinePlayerCount=0;
+let playerHp=100, deathClock=0, respawnSent=false, lastShotAt=0, muzzleFlashUntil=0;
+const cgHp=document.getElementById('cgHp'), cgHpValue=document.getElementById('cgHpValue'), cgHpFill=document.getElementById('cgHpFill');
+function cgSetHp(value){playerHp=Math.max(0,Math.min(100,Number(value)||0));cgHpValue.textContent=String(Math.round(playerHp));cgHpFill.style.width=playerHp+'%';cgHp.classList.toggle('low',playerHp<=35);if(playerHp<=0){deathClock=0;respawnSent=false;}}
+const remotePlayers=new Map();
+const cgOnlineBadge=document.createElement('div');cgOnlineBadge.id='cgOnlineBadge';cgOnlineBadge.textContent='● ONLINE · 1/8';document.body.appendChild(cgOnlineBadge);
+const cgOnlineChat=document.createElement('div');cgOnlineChat.id='cgOnlineChat';cgOnlineChat.innerHTML='<div id="cgOnlineMessages" aria-live="polite"></div><form id="cgOnlineChatForm"><input id="cgOnlineChatInput" maxlength="120" autocomplete="off" placeholder="Сообщение… Enter"/><button type="submit">ОТПРАВИТЬ</button></form>';document.body.appendChild(cgOnlineChat);
+const cgChatMessages=document.getElementById('cgOnlineMessages'),cgChatForm=document.getElementById('cgOnlineChatForm'),cgChatInput=document.getElementById('cgOnlineChatInput');
+function cgOnlineStatus(){cgOnlineBadge.textContent=`● ONLINE · ${onlinePlayerCount||1}/8`;cgOnlineBadge.style.display=onlineSocket?'block':'none';cgOnlineChat.style.display=onlineSocket&&inGame?'grid':'none';}
+function cgChatLine(name,text,system=false){const row=document.createElement('div');row.textContent=system?text:`${name}: ${text}`;row.style.color=system?'#c8ff9b':'#f4ffe9';cgChatMessages.appendChild(row);while(cgChatMessages.children.length>8)cgChatMessages.firstChild.remove();cgChatMessages.scrollTop=cgChatMessages.scrollHeight;}
+function cgNameSprite(name){const canvas=document.createElement('canvas');canvas.width=320;canvas.height=76;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(18,43,27,.88)';ctx.beginPath();ctx.roundRect(4,7,312,62,18);ctx.fill();ctx.strokeStyle='#d9ff9a';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#f7ffe8';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(name||'Игрок').slice(0,18),160,39);const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sprite.scale.set(3.6,.86,1);sprite.position.y=3.15;return sprite;}
+function cgSyncRemotePlayers(players){if(!Array.isArray(players))return;const seen=new Set();for(const p of players){if(!p||!p.id||p.id===onlinePlayerId)continue;seen.add(p.id);let r=remotePlayers.get(p.id);if(!r){const model=rooster.clone(true);model.visible=true;model.scale.setScalar(.96);const tag=cgNameSprite(p.name);model.add(tag);scene.add(model);r={model,tag,target:new THREE.Vector3(p.x||0,p.y||0,p.z||0),yaw:Number(p.yaw)||0,name:p.name||'Игрок',hp:Number(p.hp??100)};remotePlayers.set(p.id,r);}r.target.set(Number(p.x)||0,Math.max(0,Number(p.y)||0),Number(p.z)||0);r.yaw=Number(p.yaw)||0;r.name=p.name||r.name;r.hp=Number(p.hp??100);r.model.visible=r.hp>0;}
+ for(const [id,r] of remotePlayers){if(!seen.has(id)){scene.remove(r.model);r.model.traverse(o=>{if(o.isSprite&&o.material?.map)o.material.map.dispose();});remotePlayers.delete(id);}}
+ onlinePlayerCount=players.length||1;cgOnlineStatus();}
+function cgUpdateRemotes(dt){for(const r of remotePlayers.values()){r.model.position.lerp(r.target,Math.min(1,dt*10));r.model.rotation.y=r.yaw+Math.PI;}}
+function cgTracer(origin,direction,targetPosition=null){
+ const from=new THREE.Vector3(origin.x,origin.y,origin.z);
+ const to=targetPosition?new THREE.Vector3(targetPosition.x,targetPosition.y,targetPosition.z):from.clone().add(new THREE.Vector3(direction.x,direction.y,direction.z).multiplyScalar(26));
+ const geo=new THREE.BufferGeometry().setFromPoints([from,to]);const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xffe66b,transparent:true,opacity:.95}));scene.add(line);setTimeout(()=>{scene.remove(line);geo.dispose();line.material.dispose();},115);
+}
+function cgFire(){
+ if(!inGame||buildMode||playerHp<=0)return;
+ if(!onlineSocket||onlineSocket.readyState!==WebSocket.OPEN){flash('Для перестрелок зайди на онлайн-сервер');return;}
+ const now=performance.now();if(now-lastShotAt<320)return;lastShotAt=now;
+ try{onlineSocket.send(JSON.stringify({type:'shoot',yaw,pitch}));muzzleFlashUntil=now+75;blasterFlash.visible=true;setTimeout(()=>{blasterFlash.visible=false;},70);}catch(_){flash('Не удалось выстрелить');}
+}
+function cgHandleShot(m){
+ if(m.origin&&m.direction)cgTracer(m.origin,m.direction,m.targetPosition||null);
+ if(m.targetId===onlinePlayerId){cgSetHp(m.targetHp);if(m.killed)flash('ТЕБЯ ВЫБИЛИ · ВОЗРОЖДЕНИЕ…');else flash('ПОПАДАНИЕ!');}
+ if(m.targetId&&m.targetId!==onlinePlayerId){const r=remotePlayers.get(m.targetId);if(r){r.hp=Number(m.targetHp??r.hp);if(r.hp<=0){r.model.visible=false;flash('СОПЕРНИК ВЫБЫЛ');}}}
+ if(m.shooterId===onlinePlayerId&&m.targetId)flash(m.killed?'ЕСТЬ! СОПЕРНИК ВЫБЫЛ':'ПОПАДАНИЕ!');
+}
+function cgDisconnect(showMessage=false){onlineLastSent=null;onlineIdleClock=0;if(onlineSocket){const s=onlineSocket;onlineSocket=null;try{s.close(1000,'left room');}catch(_){}}onlineRoomId=null;onlinePlayerId=null;onlineRoomTitle='';for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(showMessage)flash('Ты вышел из онлайн-комнаты');}
+function cgSendChat(){const text=cgChatInput.value.trim();if(!text||!onlineSocket||onlineSocket.readyState!==WebSocket.OPEN)return;onlineSocket.send(JSON.stringify({type:'chat',text}));cgChatInput.value='';}
+cgChatForm.addEventListener('submit',e=>{e.preventDefault();cgSendChat();});
+window.addEventListener('beforeunload',()=>{try{onlineSocket?.close(1000,'page closed');}catch(_){}});
+function cgGetNick(){let value=document.getElementById('cgNick')?.value?.trim();if(!value){try{value=localStorage.getItem('cg_nick')||'';}catch(_){}}if(!value)value='Игрок'+Math.floor(100+Math.random()*900);value=value.slice(0,18);try{localStorage.setItem('cg_nick',value);}catch(_){}return value;}
+function cgEscape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function cgLoadRooms(){const list=document.getElementById('cgRooms');if(!list)return;list.innerHTML='<div class="cg-room-empty">Загружаю список комнат…</div>';try{const res=await fetch('/api/rooms',{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const rooms=Array.isArray(data.rooms)?data.rooms:[];if(!rooms.length){list.innerHTML='<div class="cg-room-empty">Пока нет комнат. Создай первую!</div>';return;}list.innerHTML=rooms.map(room=>`<article class="server-row"><div class="server-info"><h3>${cgEscape(room.name||'TOWN 3F')}</h3><p>Публичная комната · карта TOWN 3F</p><div class="server-meta"><span>ONLINE</span><span>${Number(room.players)||0}/${Number(room.maxPlayers)||8} ИГРОКОВ</span><span>ЕВРОПА · AUTO</span></div></div><div><span class="status-pill">${Number(room.players)>=Number(room.maxPlayers)?'ЗАПОЛНЕН':'ДОСТУПЕН'}</span><div style="height:10px"></div><button class="action-btn" data-join-room="${cgEscape(room.id)}" ${Number(room.players)>=Number(room.maxPlayers)?'disabled':''}>ВОЙТИ ↗</button></div></article>`).join('');list.querySelectorAll('[data-join-room]').forEach(btn=>btn.addEventListener('click',()=>{const room=rooms.find(r=>r.id===btn.dataset.joinRoom);if(room)cgJoinRoom(room.id,room.name);}));}catch(err){list.innerHTML='<div class="cg-room-empty"><b>Сервер пока не отвечает.</b><br>Проверь, что проект уже опубликован на Cloudflare Workers, а не открыт как локальный HTML-файл.<br><small>'+cgEscape(err.message)+'</small></div>';}}
+async function cgCreateRoom(){const name=cgGetNick();try{const res=await fetch('/api/rooms',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({map:'town3f',name:`TOWN 3F · ${name}`,maxPlayers:8})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Не удалось создать комнату');await cgJoinRoom(data.room.id,data.room.name);}catch(err){flash('Ошибка сервера: '+err.message);}}
+function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}`;flash('Подключаюсь к '+title+'…');let ws;try{ws=new WebSocket(url);}catch(e){flash('Не удалось открыть WebSocket');return;}ws.addEventListener('open',()=>{onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}});ws.addEventListener('error',()=>{flash('Ошибка подключения. Проверь публикацию Cloudflare.');});ws.addEventListener('close',e=>{if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(inGame)flash('Связь с сервером потеряна');}});}
+
+function flash(s){notice.textContent=s;notice.style.opacity=1;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.style.opacity=0,1400);}
+function setView(){thirdPerson=!thirdPerson;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;modeEl.textContent=thirdPerson?'TPS · CHICKEN GUN':'FPS · FIRST PERSON';flash(thirdPerson?'Вид от третьего лица':'Вид от первого лица');}
+function showMainMenu(){inGame=false;document.body.classList.remove('match-clean');cgHp.style.display='none';cgDisconnect(false);setBuildMode(false);blocksToggle.style.display='none';buildPanel.classList.remove('open');start.style.display='block';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');subview.innerHTML='';mount.style.pointerEvents='none';if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();}
+function startGame(){inGame=true;document.body.classList.add('match-clean');cgHp.style.display='block';cgSetHp(100);deathClock=0;respawnSent=false;cgOnlineStatus();start.style.display='none';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');playerPos.copy(startPos);playerPos.y=0;vertical=0;grounded=true;yaw=0;pitch=-.04;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents='auto';blocksToggle.style.display='block';setBuildMode(false);if(matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.();}
+
+// TOWN 3F build mode: place and drag modular walls, platforms and furniture.
+const blocksToggle=document.getElementById('blocksToggle');
+const buildPanel=document.getElementById('buildPanel');
+const buildItemsEl=document.getElementById('buildItems');
+const buildStatus=document.getElementById('buildStatus');
+const buildHint=document.getElementById('buildHint');
+const buildRotateBtn=document.getElementById('buildRotate');
+const buildDeleteBtn=document.getElementById('buildDelete');
+let buildMode=false, selectedBuildId=null, ghostBuild=null, draggedBuild=null, selectedPlacedBuild=null;
+let buildPointerDown=false, buildYaw=0;
+const buildObjects=[];
+const buildRaycaster=new THREE.Raycaster();
+const buildPointer=new THREE.Vector2();
+const buildGroundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+const buildCatalog=[
+ {id:'wall_plaster',icon:'🧱',name:'Стена · штукатурка',desc:'Светлая бежевая'},
+ {id:'wall_brick',icon:'🧱',name:'Стена · кирпич',desc:'Красно-коричневая'},
+ {id:'wall_metal',icon:'▤',name:'Стена · металл',desc:'Сине-зелёный профлист'},
+ {id:'platform_concrete',icon:'▰',name:'Платформа · бетон',desc:'Серая плитка'},
+ {id:'platform_wood',icon:'▰',name:'Платформа · дерево',desc:'Коричневые доски'},
+ {id:'platform_metal',icon:'▰',name:'Платформа · металл',desc:'Тёмный металл'},
+ {id:'bed',icon:'🛏️',name:'Кровать',desc:'Матрас, подушка и одеяло'},
+ {id:'table',icon:'▤',name:'Стол',desc:'Столешница и 4 ножки'},
+ {id:'chair',icon:'🪑',name:'Стул',desc:'Сиденье и спинка'},
+ {id:'sofa',icon:'🛋️',name:'Диван',desc:'Мягкие подушки и подлокотники'},
+ {id:'mirror',icon:'🪞',name:'Зеркало',desc:'Высокое зеркало в раме'},
+ {id:'flowers',icon:'💐',name:'Цветы',desc:'Горшок с листьями и цветами'},
+ {id:'mine',icon:'💣',name:'Мина',desc:'Декоративная игровая мина'},
+ {id:'armchair',icon:'🪑',name:'Кресло',desc:'Мягкое кресло с подлокотниками'},
+ {id:'fridge',icon:'🧊',name:'Холодильник',desc:'Двухсекционный с ручками'},
+ {id:'cabinet',icon:'🗄️',name:'Тумба',desc:'Два ящика и металлические ручки'},
+ {id:'bookshelf',icon:'📚',name:'Книжный шкаф',desc:'Полки с разноцветными книгами'},
+ {id:'tv',icon:'📺',name:'Телевизор',desc:'Большой экран и подставка'},
+ {id:'barrel',icon:'🛢️',name:'Бочка',desc:'Металлическая с обручами'},
+ {id:'crate',icon:'📦',name:'Ящик',desc:'Деревянный грузовой ящик'},
+ {id:'bench',icon:'🪑',name:'Скамейка',desc:'Уличная деревянная скамейка'},
+ {id:'floorlamp',icon:'💡',name:'Торшер',desc:'Высокая лампа с абажуром'},
+ {id:'rug',icon:'🟦',name:'Ковёр',desc:'Цветной ковёр с каймой'},
+ {id:'trashbin',icon:'🗑️',name:'Мусорка',desc:'Уличная металлическая урна'},
+ {id:'ball',icon:'⚽',name:'Мяч',desc:'Яркий игровой мяч'}
+];
+const buildMat={
+ plaster:mats.wall.clone(),brick:mats.wall2.clone(),metal:mats.metal.clone(),
+ concrete:mats.concrete.clone(),wood:mats.wood.clone(),wood2:mats.wood2.clone(),
+ mattress:new THREE.MeshStandardMaterial({color:0xe8e0c9,roughness:.95}),
+ pillow:new THREE.MeshStandardMaterial({color:0xf5f0df,roughness:1}),
+ darkWood:new THREE.MeshStandardMaterial({color:0x59402e,roughness:.9}),
+ blue:new THREE.MeshStandardMaterial({color:0x527c91,roughness:.8}),
+ sofaFabric:new THREE.MeshStandardMaterial({color:0x2fb88f,roughness:1}),
+ sofaLight:new THREE.MeshStandardMaterial({color:0x69d6ad,roughness:1}),
+ mirrorFrame:new THREE.MeshStandardMaterial({color:0x493b31,roughness:.72}),
+ mirrorGlass:new THREE.MeshStandardMaterial({color:0x69d9f1,metalness:.48,roughness:.2}),
+ flowerPot:new THREE.MeshStandardMaterial({color:0xef8247,roughness:.9}),
+ leaf:new THREE.MeshStandardMaterial({color:0x55b94d,roughness:1}),
+ petal:new THREE.MeshStandardMaterial({color:0xe8c6e2,roughness:.85}),
+ petalGold:new THREE.MeshStandardMaterial({color:0xf0c34f,roughness:.85}),
+ mineBody:new THREE.MeshStandardMaterial({color:0x343d3c,metalness:.45,roughness:.65}),
+ mineTop:new THREE.MeshStandardMaterial({color:0xc34a38,metalness:.25,roughness:.55}),
+ mineWarning:new THREE.MeshStandardMaterial({color:0xe9c64f,roughness:.8}),
+ upholsteryDark:new THREE.MeshStandardMaterial({color:0x315c4b,roughness:.98}),
+ upholsteryMid:new THREE.MeshStandardMaterial({color:0x648b70,roughness:.96}),
+ upholsteryLight:new THREE.MeshStandardMaterial({color:0x9db69a,roughness:.98}),
+ cream:new THREE.MeshStandardMaterial({color:0xf0e7d4,roughness:1}),
+ quilt:new THREE.MeshStandardMaterial({color:0x526f91,roughness:1}),
+ quiltLight:new THREE.MeshStandardMaterial({color:0x8ba8c4,roughness:1}),
+ walnut:new THREE.MeshStandardMaterial({color:0x503525,roughness:.83}),
+ oak:new THREE.MeshStandardMaterial({color:0xb17c4c,roughness:.88}),
+ brass:new THREE.MeshStandardMaterial({color:0xc69b4d,metalness:.58,roughness:.42}),
+ chrome:new THREE.MeshStandardMaterial({color:0x89999a,metalness:.72,roughness:.32}),
+ seam:new THREE.MeshStandardMaterial({color:0xd0c3a7,roughness:1}),
+ flowerPink:new THREE.MeshStandardMaterial({color:0xe889a8,roughness:.9}),
+ flowerPurple:new THREE.MeshStandardMaterial({color:0x9b83d0,roughness:.9}),
+ flowerOrange:new THREE.MeshStandardMaterial({color:0xf29b4a,roughness:.9}),
+ flowerCenter:new THREE.MeshStandardMaterial({color:0xf4cf62,roughness:.9}),
+ mineGreen:new THREE.MeshStandardMaterial({color:0x465a49,metalness:.3,roughness:.7}),
+ fabricRed:new THREE.MeshStandardMaterial({color:0xe45d55,roughness:1}),
+ fabricBlue:new THREE.MeshStandardMaterial({color:0x3e9dcc,roughness:1}),
+ enamel:new THREE.MeshStandardMaterial({color:0xe8eee9,roughness:.48,metalness:.12}),
+ screen:new THREE.MeshStandardMaterial({color:0x142a3b,roughness:.18,metalness:.25,emissive:0x071b2d,emissiveIntensity:.3}),
+ rubber:new THREE.MeshStandardMaterial({color:0x26343a,roughness:.92}),
+ steel:new THREE.MeshStandardMaterial({color:0x71858b,metalness:.62,roughness:.42}),
+ bookRed:new THREE.MeshStandardMaterial({color:0xc94f45,roughness:.88}),
+ bookBlue:new THREE.MeshStandardMaterial({color:0x397fae,roughness:.88}),
+ bookGreen:new THREE.MeshStandardMaterial({color:0x4c9c62,roughness:.88}),
+ bookYellow:new THREE.MeshStandardMaterial({color:0xe5b94d,roughness:.88}),
+ rug:new THREE.MeshStandardMaterial({color:0x316f9f,roughness:1}),
+ rugEdge:new THREE.MeshStandardMaterial({color:0xe7bd55,roughness:1}),
+ binBlue:new THREE.MeshStandardMaterial({color:0x347c87,metalness:.18,roughness:.78})
+};
+buildMat.plaster.color.setHex(0xe2d6bd);
+buildMat.brick.color.setHex(0xc17e5d);
+buildMat.metal.color.setHex(0x78949a);
+buildMat.concrete.color.setHex(0xa7aaa3);
+buildMat.wood.color.setHex(0x9b7048);
+buildMat.wood2.color.setHex(0x755035);
+function buildBox(g,x,y,z,w,h,d,material){const m=box(g,x,y,z,w,h,d,material,true,true);m.userData.isBuildPart=true;return m;}
+const roundedBuildGeometry=new Map();
+function roundedBuildGeo(w,h,d,r){
+ const key=[w,h,d,r].map(v=>Number(v).toFixed(2)).join('|');
+ if(roundedBuildGeometry.has(key))return roundedBuildGeometry.get(key);
+ const b=Math.min(.055,d*.2,w*.08,h*.16),sw=Math.max(.08,w-2*b),sh=Math.max(.08,h-2*b),sr=Math.max(.025,Math.min(r,sw*.22,sh*.22)-b);
+ const x=-sw/2,y=-sh/2,shape=new THREE.Shape();
+ shape.moveTo(x+sr,y);shape.lineTo(-x-sr,y);shape.quadraticCurveTo(-x,y,-x,y+sr);
+ shape.lineTo(-x,-y-sr);shape.quadraticCurveTo(-x,-y,-x-sr,-y);
+ shape.lineTo(x+sr,-y);shape.quadraticCurveTo(x,-y,x,-y-sr);
+ shape.lineTo(x,y+sr);shape.quadraticCurveTo(x,y,x+sr,y);
+ const depth=Math.max(.025,d-2*b);
+ const geo=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:b,bevelThickness:b,curveSegments:5});
+ geo.translate(0,0,-depth/2);geo.computeVertexNormals();roundedBuildGeometry.set(key,geo);return geo;
+}
+function buildRound(g,x,y,z,w,h,d,material,r=.1){
+ const m=new THREE.Mesh(roundedBuildGeo(w,h,d,r),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;m.userData.isBuildPart=true;g.add(m);return m;
+}
+function buildCylinder(g,x,y,z,top,bottom,h,material,segments=18){const m=cyl(g,x,y,z,top,bottom,h,material,segments);m.castShadow=true;m.receiveShadow=true;m.userData.isBuildPart=true;return m;}
+function buildRing(g,x,y,z,r,tube,material,rotationX=Math.PI/2){const m=new THREE.Mesh(new THREE.TorusGeometry(r,tube,8,28),material);m.position.set(x,y,z);m.rotation.x=rotationX;m.castShadow=true;m.receiveShadow=true;m.userData.isBuildPart=true;g.add(m);return m;}
+function makeBuildObject(id){
+ const g=new THREE.Group();g.userData.buildItem=true;g.userData.buildId=id;g.userData.buildLabel=buildCatalog.find(v=>v.id===id)?.name||id;
+ if(id==='wall_plaster'||id==='wall_brick'||id==='wall_metal'){
+  const material=id==='wall_plaster'?buildMat.plaster:(id==='wall_brick'?buildMat.brick:buildMat.metal);
+  buildBox(g,0,1.75,0,5.8,3.5,.28,material);
+  buildRound(g,0,.16,.19,5.83,.3,.12,buildMat.walnut,.035);
+  buildRound(g,0,3.48,.02,6.0,.16,.42,buildMat.oak,.045);
+  if(id==='wall_plaster'){
+   for(const x of [-2.25,0,2.25]){buildRound(g,x,1.87,.166,1.25,2.9,.035,buildMat.cream,.055);buildRound(g,x,1.87,.193,1.17,2.82,.025,buildMat.plaster,.045);}
+   for(const x of [-2.7,2.7])buildRound(g,x,1.82,.2,.12,3.25,.075,buildMat.oak,.03);
+  } else if(id==='wall_brick'){
+   // Recessed mortar courses and alternating short vertical joints.
+   for(let row=0;row<9;row++){
+    const yy=.18+row*.39;buildRound(g,0,yy,.158,5.72,.035,.035,buildMat.seam,.012);
+    for(let col=0;col<8;col++){const xx=-2.52+col*.72+(row%2)*.36;if(Math.abs(xx)<2.82)buildRound(g,xx,yy+.19,.16,.035,.34,.035,buildMat.seam,.01);}
+   }
+  } else {
+   for(let x=-2.68;x<=2.69;x+=.34)buildRound(g,x,1.78,.19,.075,3.28,.055,buildMat.chrome,.025);
+   for(const y of [.22,3.28])buildRound(g,0,y,.22,5.82,.09,.08,buildMat.walnut,.025);
+   for(const x of [-2.7,2.7])for(const y of [.35,3.18])buildCylinder(g,x,y,.26,.055,.055,.045,buildMat.brass,10);
+  }
+  for(const x of [-2.82,2.82])buildRound(g,x,1.78,.02,.16,3.52,.42,buildMat.walnut,.035);
+ } else if(id.startsWith('platform_')){
+  const material=id==='platform_concrete'?buildMat.concrete:(id==='platform_wood'?buildMat.wood:buildMat.metal);
+  buildRound(g,0,.34,0,5.2,.68,5.2,material,.12);
+  if(id==='platform_wood'){
+   for(let z=-2.25;z<=2.26;z+=.52){buildRound(g,0,.692,z,5.12,.035,.035,buildMat.walnut,.012);}
+   for(const z of [-1.72,1.72])buildRound(g,0,.12,z,5.0,.2,.22,buildMat.walnut,.035);
+  }else if(id==='platform_metal'){
+   for(let x=-2.25;x<=2.26;x+=.5)buildRound(g,x,.695,0,.045,.035,5.08,buildMat.chrome,.012);
+   for(let z=-2.25;z<=2.26;z+=.5)buildRound(g,0,.695,z,5.08,.025,.045,buildMat.chrome,.01);
+   for(const x of [-2.45,2.45])buildRound(g,x,.35,0,.12,.7,5.1,buildMat.walnut,.025);
+  }else{
+   for(let x=-2;x<=2.01;x+=1)for(let z=-2;z<=2.01;z+=1){buildRound(g,x,.695,z,.028,.018,.028,buildMat.chrome,.008);}
+   for(const x of [-2.38,2.38])buildRound(g,x,.12,0,.18,.22,4.8,buildMat.cream,.035);
+   for(const z of [-2.38,2.38])buildRound(g,0,.12,z,4.8,.22,.18,buildMat.cream,.035);
+  }
+  // Small inset fasteners make the platform read as a finished modular piece.
+  for(const x of [-2.36,2.36])for(const z of [-2.36,2.36]){
+   buildCylinder(g,x,.706,z,.07,.07,.025,buildMat.walnut,12);
+   buildRound(g,x,.722,z,.045,.012,.012,buildMat.brass,.004);
+  }
+ } else if(id==='bed'){
+  // Warm oak bed with upholstered headboard, soft mattress, stitched duvet and pillows.
+  for(const x of [-1.08,1.08])for(const z of [-1.82,1.82]){
+   buildRound(g,x,.32,z,.19,.64,.19,buildMat.walnut,.055);
+   buildRound(g,x,.08,z,.25,.12,.25,buildMat.brass,.035);
+  }
+  buildRound(g,0,.62,0,2.55,.34,4.25,buildMat.oak,.12);
+  buildRound(g,0,.84,0,2.42,.28,4.1,buildMat.cream,.18);
+  buildRound(g,0,1.04,.48,2.34,.2,2.55,buildMat.quilt,.15);
+  buildRound(g,0,1.155,.48,2.24,.035,2.42,buildMat.quiltLight,.11);
+  // Duvet seams and a folded band at the foot.
+  for(const x of [-.72,0,.72])buildRound(g,x,1.18,.48,.025,.018,2.2,buildMat.cream,.008);
+  buildRound(g,0,1.17,1.45,2.32,.1,.48,buildMat.blue,.08);
+  for(const x of [-.62,.62]){
+   buildRound(g,x,1.12,-1.43,.93,.3,.78,buildMat.pillow,.2);
+   buildRound(g,x,1.28,-1.43,.76,.025,.6,buildMat.cream,.13);
+  }
+  buildRound(g,0,1.58,-2.02,2.72,1.38,.22,buildMat.walnut,.09);
+  buildRound(g,0,1.62,-1.89,2.43,1.05,.12,buildMat.oak,.08);
+  for(const x of [-.82,0,.82])buildRound(g,x,1.68,-1.815,.035,.72,.035,buildMat.walnut,.015);
+ } else if(id==='table'){
+  // Rounded oak top with contrasting edge, apron, tapered legs and metal shoes.
+  buildRound(g,0,1.12,0,2.8,.2,1.92,buildMat.oak,.14);
+  buildRound(g,0,1.015,0,2.73,.08,1.85,buildMat.walnut,.09);
+  for(const x of [-1.12,1.12])for(const z of [-.68,.68]){
+   buildRound(g,x,.52,z,.18,1.02,.18,buildMat.walnut,.055);
+   buildRound(g,x,.08,z,.21,.14,.21,buildMat.brass,.045);
+  }
+  buildRound(g,0,.79,-.72,2.22,.28,.13,buildMat.oak,.04);
+  buildRound(g,0,.79,.72,2.22,.28,.13,buildMat.oak,.04);
+  for(const x of [-1.12,1.12])buildRound(g,x,.79,0,.13,.28,1.22,buildMat.oak,.04);
+  for(const x of [-.8,0,.8])buildRound(g,x,1.225,0,.08,.025,.08,buildMat.seam,.025);
+ } else if(id==='chair'){
+  // Dining chair with sculpted-looking padded seat and slatted back.
+  for(const x of [-.46,.46])for(const z of [-.42,.42]){
+   buildRound(g,x,.39,z,.14,.78,.14,buildMat.walnut,.045);
+   buildRound(g,x,.055,z,.18,.11,.18,buildMat.brass,.035);
+  }
+  buildRound(g,0,.86,.02,1.22,.2,1.16,buildMat.oak,.14);
+  buildRound(g,0,.99,.02,1.08,.14,1.02,buildMat.upholsteryMid,.16);
+  for(const x of [-.49,.49])buildRound(g,x,1.56,-.48,.14,1.28,.14,buildMat.walnut,.05);
+  buildRound(g,0,1.72,-.48,1.12,.76,.18,buildMat.oak,.12);
+  buildRound(g,0,1.75,-.36,.94,.54,.07,buildMat.upholsteryLight,.12);
+  for(const y of [1.42,1.68,1.94])buildRound(g,0,y,-.34,.78,.035,.035,buildMat.walnut,.012);
+  buildRound(g,0,.67,-.2,.82,.12,.13,buildMat.walnut,.035);
+ } else if(id==='sofa'){
+  // Deep green 3-seat sofa with rounded cushions, piping, feet and throw pillows.
+  buildRound(g,0,.45,0,3.12,.52,1.42,buildMat.walnut,.16);
+  buildRound(g,0,.77,.08,3.0,.5,1.36,buildMat.upholsteryDark,.18);
+  buildRound(g,0,1.36,-.48,3.0,1.08,.34,buildMat.upholsteryDark,.16);
+  for(const x of [-1.44,1.44]){
+   buildRound(g,x,1.0,.02,.34,1.0,1.5,buildMat.upholsteryMid,.16);
+   buildRound(g,x,1.49,.05,.34,.14,1.34,buildMat.upholsteryLight,.13);
+  }
+  for(const x of [-.94,0,.94]){
+   buildRound(g,x,1.02,.24,.88,.24,.96,buildMat.upholsteryLight,.16);
+   buildRound(g,x,1.48,-.27,.86,.7,.16,buildMat.upholsteryMid,.17);
+   // subtle stitched piping on seat and back cushions
+   buildRound(g,x,1.15,.735,.72,.018,.018,buildMat.cream,.008);
+   buildRound(g,x,1.82,-.174,.68,.018,.018,buildMat.cream,.008);
+  }
+  for(const x of [-1.2,1.2])for(const z of [-.52,.52])buildRound(g,x,.19,z,.16,.34,.16,buildMat.brass,.045);
+  for(const x of [-.8,0,.8])for(const y of [1.37,1.57])sphere(g,x,y,-.27,.035,.035,.025,buildMat.walnut,8);
+ } else if(id==='mirror'){
+  // Full-length mirror with rounded oak surround, cool reflective glass and a stable easel.
+  buildRound(g,0,1.62,0,1.62,3.18,.2,buildMat.walnut,.28);
+  buildRound(g,0,1.64,.118,1.36,2.88,.055,buildMat.mirrorGlass,.25);
+  buildRound(g,0,1.64,.15,1.23,2.72,.025,buildMat.blue,.22);
+  buildRound(g,-.48,1.66,.17,.035,2.52,.018,buildMat.cream,.012);
+  buildRound(g,.43,1.66,.17,.018,2.48,.018,buildMat.chrome,.008);
+  buildRound(g,0,.12,.02,1.92,.2,.68,buildMat.walnut,.1);
+  for(const x of [-.58,.58])buildRound(g,x,.82,-.14,.1,1.58,.1,buildMat.oak,.04);
+  for(const x of [-.68,.68])buildCylinder(g,x,.2,.03,.07,.07,.035,buildMat.brass,12);
+ } else if(id==='flowers'){
+  // Decorative ceramic planter with a glazed rim, foliage and individual colourful blooms.
+  buildCylinder(g,0,.34,0,.34,.43,.62,buildMat.flowerPot,20);
+  buildRing(g,0,.65,0,.36,.055,buildMat.brass,0);
+  buildCylinder(g,0,.66,0,.31,.31,.045,buildMat.walnut,18);
+  const flowers=[[-.28,1.31,-.13,buildMat.flowerPink],[-.04,1.52,.08,buildMat.flowerOrange],[.24,1.36,-.08,buildMat.flowerPurple],[.1,1.68,-.12,buildMat.flowerPink],[-.25,1.54,.13,buildMat.flowerOrange]];
+  flowers.forEach(([x,y,z,petalMat],i)=>{
+   const stem=buildCylinder(g,x*.35,(y+.68)/2,z*.35,.027,.038,y-.68,buildMat.leaf,8);stem.rotation.z=(i%2?-.09:.08);
+   for(let k=0;k<2;k++){
+    const leaf=sphere(g,x*.55+(k?-.12:.12),.91+k*.1,z+.08,.17,.07,.1,buildMat.leaf,10);leaf.rotation.z=k?-.48:.48;
+   }
+   for(let a=0;a<6;a++){
+    const ang=a*Math.PI/3;const p=sphere(g,x+Math.cos(ang)*.13,y,z+Math.sin(ang)*.13,.115,.09,.095,petalMat,10);p.rotation.y=ang;
+   }
+   sphere(g,x,y,z,.09,.09,.09,buildMat.flowerCenter,10);
+  });
+ } else if(id==='mine'){
+  // Decorative harmless prop.
+  buildCylinder(g,0,.18,0,.44,.44,.28,buildMat.mineGreen,20);buildRing(g,0,.095,0,.405,.045,buildMat.chrome,0);buildCylinder(g,0,.36,0,.36,.36,.12,buildMat.mineBody,20);buildRing(g,0,.425,0,.28,.025,buildMat.brass,0);buildCylinder(g,0,.455,0,.18,.18,.07,buildMat.mineTop,18);buildCylinder(g,0,.535,0,.09,.09,.13,buildMat.mineWarning,14);for(let a=0;a<8;a++){const ang=a*Math.PI/4;buildCylinder(g,Math.cos(ang)*.34,.37,Math.sin(ang)*.34,.045,.045,.045,buildMat.brass,10);}buildRound(g,0,.61,0,.29,.035,.13,buildMat.mineWarning,.025);
+ } else if(id==='armchair'){
+  buildRound(g,0,.45,.12,1.95,.5,1.72,buildMat.walnut,.17);buildRound(g,0,.78,.1,1.82,.38,1.55,buildMat.upholsteryDark,.18);buildRound(g,0,1.42,-.48,1.86,1.25,.34,buildMat.upholsteryMid,.16);
+  for(const x of [-.91,.91]){buildRound(g,x,1.0,.03,.3,1.08,1.72,buildMat.upholsteryDark,.14);buildRound(g,x,1.55,.03,.34,.16,1.55,buildMat.upholsteryLight,.12);}
+  for(const x of [-.68,.68])for(const z of [-.48,.65])buildRound(g,x,.17,z,.14,.32,.14,buildMat.brass,.04);
+  buildRound(g,0,1.08,.5,1.42,.22,.82,buildMat.upholsteryLight,.16);
+ } else if(id==='fridge'){
+  buildRound(g,0,1.35,0,1.62,2.7,1.28,buildMat.enamel,.12);buildRound(g,0,1.43,.665,1.46,1.48,.055,buildMat.cream,.06);buildRound(g,0,2.33,.67,1.46,.08,.07,buildMat.steel,.025);
+  buildRound(g,.54,1.67,.72,.075,.78,.08,buildMat.chrome,.03);buildRound(g,.54,2.43,.72,.075,.22,.08,buildMat.chrome,.03);
+  buildRound(g,-.54,1.67,.72,.075,.78,.08,buildMat.chrome,.03);buildRound(g,0,2.72,.65,1.25,.035,.045,buildMat.steel,.01);
+  for(const x of [-.57,.57])buildRound(g,x,.08,-.48,.16,.16,.16,buildMat.rubber,.04);
+ } else if(id==='cabinet'){
+  buildRound(g,0,1.0,0,2.18,1.92,.82,buildMat.oak,.09);buildRound(g,0,1.0,.43,2.05,1.78,.07,buildMat.walnut,.045);
+  for(const y of [.55,1.45]){buildRound(g,0,y,.49,1.92,.73,.06,buildMat.oak,.04);buildRound(g,0,y,.535,.15,.11,.055,buildMat.brass,.025);}
+  for(const x of [-.92,.92])buildRound(g,x,1.0,.5,.045,1.65,.05,buildMat.walnut,.01);
+  for(const x of [-.88,.88])for(const z of [-.28,.28])buildRound(g,x,.08,z,.13,.16,.13,buildMat.walnut,.035);
+ } else if(id==='bookshelf'){
+  buildBox(g,0,1.42,-.2,2.25,2.8,.3,buildMat.walnut);buildBox(g,-1.04,1.42,.04,.18,2.8,.62,buildMat.oak);buildBox(g,1.04,1.42,.04,.18,2.8,.62,buildMat.oak);
+  for(const y of [.18,.86,1.54,2.22,2.88])buildBox(g,0,y,.04,2.12,.13,.62,buildMat.oak);
+  const books=[buildMat.bookRed,buildMat.bookBlue,buildMat.bookGreen,buildMat.bookYellow];
+  for(let row=0;row<4;row++){let x=-.86;for(let k=0;k<7;k++){const w=.13+(k%3)*.035,h=.34+(k%4)*.075;buildRound(g,x+w/2,.25+row*.68+h/2,.08,w,h,.35,books[(k+row)%books.length],.02);x+=w+.035;}}
+ } else if(id==='tv'){
+  buildRound(g,0,.72,0,2.8,.28,.9,buildMat.walnut,.08);for(const x of [-1.15,1.15])buildRound(g,x,.35,.02,.12,.72,.12,buildMat.walnut,.035);
+  buildRound(g,0,1.95,-.02,2.75,1.72,.18,buildMat.rubber,.12);buildRound(g,0,1.96,.09,2.53,1.5,.035,buildMat.screen,.08);buildRound(g,0,1.05,.12,.46,.12,.42,buildMat.steel,.04);buildRound(g,0,1.0,.16,.88,.08,.55,buildMat.steel,.04);
+  sphere(g,.94,1.12,.115,.035,.035,.025,buildMat.trafficYellow,8);
+ } else if(id==='barrel'){
+  buildCylinder(g,0,.72,0,.58,.52,1.42,buildMat.binBlue,18);for(const y of [.17,.47,1.0,1.32])buildRing(g,0,y,0,.55,.045,buildMat.steel,0);buildCylinder(g,0,1.45,0,.55,.55,.08,buildMat.steel,18);buildRound(g,0,1.5,0,.13,.025,.13,buildMat.rubber,.02);
+ } else if(id==='crate'){
+  buildBox(g,0,.72,0,1.65,1.42,1.65,buildMat.oak);for(const x of [-.55,.55]){buildRound(g,x,.72,.84,.16,1.23,.09,buildMat.walnut,.025);buildRound(g,x,.72,-.84,.16,1.23,.09,buildMat.walnut,.025);}for(const y of [.12,1.32])buildRound(g,0,y,.86,1.56,.12,.08,buildMat.walnut,.025);
+  const d1=buildRound(g,0,.72,.91,1.4,.12,.09,buildMat.cream,.025);d1.rotation.z=.72;const d2=buildRound(g,0,.72,.92,1.4,.12,.09,buildMat.cream,.025);d2.rotation.z=-.72;
+ } else if(id==='bench'){
+  for(const x of [-1.12,1.12]){buildRound(g,x,.53,0,.16,1.0,.75,buildMat.steel,.04);buildRound(g,x,1.0,-.36,.14,1.55,.14,buildMat.steel,.035);}
+  for(let i=0;i<4;i++){const z=-.48+i*.32;buildRound(g,0,.86,z,2.7,.16,.25,buildMat.oak,.055);}
+  for(let i=0;i<3;i++)buildRound(g,0,1.45,-.42+i*.3,2.65,.13,.2,buildMat.oak,.045);
+ } else if(id==='floorlamp'){
+  buildCylinder(g,0,.12,0,.43,.43,.22,buildMat.brass,18);buildCylinder(g,0,1.25,0,.055,.07,2.18,buildMat.steel,12);buildCylinder(g,0,2.45,0,.42,.68,.68,buildMat.rugEdge,18);buildCylinder(g,0,2.12,0,.18,.18,.08,buildMat.trafficYellow,12);sphere(g,0,2.18,0,.22,.22,.22,buildMat.cream,12);
+ } else if(id==='rug'){
+  buildRound(g,0,.06,0,3.3,.12,2.45,buildMat.rug,.28);buildRound(g,0,.13,0,3.08,.025,2.23,buildMat.rugEdge,.24);buildRound(g,0,.15,0,2.9,.025,2.05,buildMat.rug,.22);
+  for(const x of [-1.25,1.25])for(const z of [-.82,.82])buildRound(g,x,.17,z,.18,.025,.18,buildMat.cream,.04);
+ } else if(id==='trashbin'){
+  buildCylinder(g,0,.62,0,.48,.4,1.2,buildMat.binBlue,16);buildRing(g,0,1.18,0,.46,.06,buildMat.steel,0);buildCylinder(g,0,1.27,0,.49,.49,.14,buildMat.rubber,16);buildRound(g,0,1.37,0,.2,.08,.2,buildMat.steel,.04);
+  for(let i=0;i<10;i++){const a=i*Math.PI/5;const rib=buildRound(g,Math.cos(a)*.405,.62,Math.sin(a)*.405,.035,.92,.035,buildMat.steel,.01);rib.rotation.y=-a;}
+ } else if(id==='ball'){
+  const ball=new THREE.Mesh(new THREE.IcosahedronGeometry(.72,1),buildMat.bookBlue);ball.position.y=.73;ball.castShadow=true;g.add(ball);for(let i=0;i<5;i++){const patch=sphere(g,Math.cos(i*Math.PI*2/5)*.38,.73+Math.sin(i*Math.PI*2/5)*.38,0,.16,.16,.09,i%2?buildMat.cream:buildMat.bookYellow,8);patch.rotation.z=i*.5;}
+ }
+ const footprints={
+  wall_plaster:[5.95,.52],wall_brick:[5.95,.52],wall_metal:[5.95,.52],
+  platform_concrete:[5.35,5.35],platform_wood:[5.35,5.35],platform_metal:[5.35,5.35],
+  bed:[2.85,4.65],table:[2.9,2.0],chair:[1.45,1.4],
+  sofa:[3.45,1.72],mirror:[1.9,.78],flowers:[1.05,1.05],mine:[.92,.92],
+  armchair:[2.2,2.0],fridge:[1.8,1.5],cabinet:[2.3,1.05],bookshelf:[2.45,.85],tv:[2.95,1.05],
+  barrel:[1.25,1.25],crate:[1.9,1.9],bench:[3.0,1.0],floorlamp:[.95,.95],rug:[3.35,2.5],trashbin:[1.05,1.05],ball:[1.55,1.55]
+ };
+ const fp=footprints[id]||[1,1];g.userData.collisionSize={w:fp[0],d:fp[1]};
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.userData.buildRoot=g;o.material=o.material.clone();}});
+ g.updateMatrixWorld(true);
+ const localBounds=new THREE.Box3().setFromObject(g);
+ g.userData.localMinY=Number.isFinite(localBounds.min.y)?localBounds.min.y:0;
+ g.userData.localMaxY=Number.isFinite(localBounds.max.y)?localBounds.max.y:1;
+ return g;
+}
+function setBuildGhostStyle(g,ghost){g.traverse(o=>{if(o.isMesh&&o.material){o.material.transparent=ghost;o.material.opacity=ghost?.53:1;o.material.depthWrite=!ghost;o.material.needsUpdate=true;}});}
+function renderBuildCatalog(){buildItemsEl.innerHTML=buildCatalog.map(item=>`<button class="build-item" type="button" data-build-item="${item.id}"><span class="build-icon">${item.icon}</span><span><b>${item.name}</b><small>${item.desc}</small></span></button>`).join('');}
+function setBuildStatus(s){buildStatus.textContent=s;}
+function cancelBuildSelection(){if(ghostBuild){scene.remove(ghostBuild);ghostBuild=null;}selectedBuildId=null;buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.remove('selected'));setBuildStatus('Выбери предмет. Клик по земле или верхней поверхности предмета — поставить. F — закрыть.');buildHint.classList.remove('show');}
+function setBuildMode(open){const wasOpen=buildMode;buildMode=!!open;buildPanel.classList.toggle('open',buildMode);blocksToggle.classList.toggle('active',buildMode);blocksToggle.setAttribute('aria-expanded',String(buildMode));buildHint.classList.toggle('show',buildMode);if(buildMode){if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();mount.style.pointerEvents='auto';setBuildStatus('Наведи на землю или верх предмета и нажми — можно строить этажами. Перетаскивание — двигать. F — закрыть.');}else{cancelBuildSelection();draggedBuild=null;selectedPlacedBuild=null;if(wasOpen&&inGame&&matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.();}}
+function rayFromBuildPointer(e){const r=renderer.domElement.getBoundingClientRect();buildPointer.x=((e.clientX-r.left)/Math.max(1,r.width))*2-1;buildPointer.y=-((e.clientY-r.top)/Math.max(1,r.height))*2+1;camera.updateMatrixWorld(true);buildRaycaster.setFromCamera(buildPointer,camera);}
+function hitTopSurface(hit){
+ if(!hit?.face||!hit.object?.matrixWorld)return false;
+ const normal=hit.face.normal.clone().applyMatrix3(new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld)).normalize();
+ return normal.y>.58;
+}
+function buildPlacementPoint(e,excludeRoot=null){
+ rayFromBuildPointer(e);
+ const candidates=buildObjects.filter(o=>o!==excludeRoot);
+ const hits=candidates.length?buildRaycaster.intersectObjects(candidates,true):[];
+ let supportHit=null,supportRoot=null;
+ // The nearest visible surface must face upward. Side faces are not valid supports.
+ if(hits.length&&hitTopSurface(hits[0])){
+  supportHit=hits[0];supportRoot=findBuildRoot(supportHit.object);
+ }
+ const point=new THREE.Vector3();
+ if(supportHit){point.copy(supportHit.point);}
+ else if(!buildRaycaster.ray.intersectPlane(buildGroundPlane,point)){
+  const dir=buildRaycaster.ray.direction;const t=dir.y<-.025?camera.position.y/-dir.y:10;
+  point.copy(camera.position).addScaledVector(dir,Math.max(3,Math.min(28,t)));point.y=0;
+ }
+ point.x=THREE.MathUtils.clamp(point.x,-108,108);point.z=THREE.MathUtils.clamp(point.z,-80,80);
+ // Ground placements snap to the city grid; stacked placements remain precise so
+ // small items can fit on tables, shelves, platforms and other narrow surfaces.
+ if(!supportRoot){point.x=Math.round(point.x*2)/2;point.z=Math.round(point.z*2)/2;}
+ else{point.x=Math.round(point.x*20)/20;point.z=Math.round(point.z*20)/20;}
+ return {x:point.x,z:point.z,surfaceY:supportHit?Math.max(0,supportHit.point.y):0,supportRoot};
+}
+function moveGhostTo(e){if(!ghostBuild)return;const p=buildPlacementPoint(e);ghostBuild.position.set(p.x,p.surfaceY-(ghostBuild.userData.localMinY||0),p.z);ghostBuild.rotation.y=buildYaw;}
+function selectBuildItem(id){if(selectedBuildId===id&&ghostBuild){cancelBuildSelection();return;}if(ghostBuild)scene.remove(ghostBuild);selectedBuildId=id;selectedPlacedBuild=null;draggedBuild=null;buildYaw=0;ghostBuild=makeBuildObject(id);setBuildGhostStyle(ghostBuild,true);scene.add(ghostBuild);const dirX=-Math.sin(yaw),dirZ=-Math.cos(yaw);ghostBuild.position.set(playerPos.x+dirX*5,-(ghostBuild.userData.localMinY||0),playerPos.z+dirZ*5);ghostBuild.rotation.y=buildYaw;buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.toggle('selected',b.dataset.buildItem===id));const name=buildCatalog.find(v=>v.id===id)?.name||id;setBuildStatus(`${name}: перемести курсор и нажми на землю или верх предмета, чтобы поставить. R — поворот.`);buildHint.textContent='Клик по земле или предмету сверху — поставить · перетаскивание — двигать · R — повернуть · F — закрыть';buildHint.classList.add('show');}
+function findBuildRoot(obj){let n=obj;while(n&&n!==scene){if(n.userData?.buildItem)return n;n=n.parent;}return null;}
+function buildVerticalRange(obj,y=obj.position.y){return {min:y+(obj.userData.localMinY??0),max:y+(obj.userData.localMaxY??1)};}
+function buildFootprintHitsPlayer(obj,x,z,y=obj.position.y){
+ const size=obj.userData.collisionSize;if(!size)return false;
+ const vr=buildVerticalRange(obj,y),playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
+ if(vr.max<=playerBottom+.04||vr.min>=playerTop-.04)return false;
+ const dx=playerPos.x-x,dz=playerPos.z-z,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
+ const lx=co*dx-si*dz,lz=si*dx+co*dz,r=.58;
+ const ox=Math.max(Math.abs(lx)-size.w/2,0),oz=Math.max(Math.abs(lz)-size.d/2,0);
+ return ox*ox+oz*oz<r*r;
+}
+function footprintsOverlap(a,ax,az,ar,b,bx,bz,br){
+ const as=a.userData.collisionSize,bs=b.userData.collisionSize;if(!as||!bs)return false;
+ const axis=(angle,isX)=>isX?{x:Math.cos(angle),z:-Math.sin(angle)}:{x:Math.sin(angle),z:Math.cos(angle)};
+ const axes=[axis(ar,true),axis(ar,false),axis(br,true),axis(br,false)];
+ const dx=bx-ax,dz=bz-az;
+ for(const v of axes){
+  const distance=Math.abs(dx*v.x+dz*v.z);
+  const aX=axis(ar,true),aZ=axis(ar,false),bX=axis(br,true),bZ=axis(br,false);
+  const ra=as.w*.5*Math.abs(aX.x*v.x+aX.z*v.z)+as.d*.5*Math.abs(aZ.x*v.x+aZ.z*v.z);
+  const rb=bs.w*.5*Math.abs(bX.x*v.x+bX.z*v.z)+bs.d*.5*Math.abs(bZ.x*v.x+bZ.z*v.z);
+  if(distance>=ra+rb-.025)return false;
+ }
+ return true;
+}
+function placementBlocker(obj,x,y,z,supportRoot=null,excludeRoot=null){
+ if(buildFootprintHitsPlayer(obj,x,z,y))return 'player';
+ const candidateY=buildVerticalRange(obj,y);
+ for(const other of buildObjects){
+  if(other===supportRoot||other===excludeRoot||other===obj)continue;
+  const otherY=buildVerticalRange(other);
+  const verticalOverlap=Math.min(candidateY.max,otherY.max)-Math.max(candidateY.min,otherY.min);
+  if(verticalOverlap<=.04)continue; // touching top faces is allowed; actual stacking is supported
+  if(footprintsOverlap(obj,x,z,obj.rotation.y,other,other.position.x,other.position.z,other.rotation.y))return other;
+ }
+ return null;
+}
+function placeGhost(e){
+ if(!ghostBuild)return false;
+ const p=buildPlacementPoint(e),placed=ghostBuild,y=p.surfaceY-(placed.userData.localMinY||0);
+ placed.position.set(p.x,y,p.z);placed.rotation.y=buildYaw;
+ const blocker=placementBlocker(placed,p.x,y,p.z,p.supportRoot,null);
+ if(blocker){setBuildStatus(blocker==='player'?'Нельзя поставить предмет в тело петушка. Отойди и попробуй снова.':'Здесь пересекается другой предмет. Выбери свободное место или поставь предмет сверху.');return false;}
+ setBuildGhostStyle(placed,false);placed.userData.isPlacedBuild=true;buildObjects.push(placed);ghostBuild=null;selectedBuildId=null;
+ buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.remove('selected'));selectedPlacedBuild=placed;
+ setBuildStatus(`${placed.userData.buildLabel} установлено. Можно ставить предметы сверху: наведи курсор на верхнюю поверхность другого предмета.`);return true;
+}
+function beginBuildPointer(e){if(!buildMode||e.button!==0)return;e.preventDefault();e.stopPropagation();buildPointerDown=true;rayFromBuildPointer(e);
+ if(ghostBuild){placeGhost(e);return;}
+ const hits=buildRaycaster.intersectObjects(buildObjects,true),hit=hits[0],root=hit?findBuildRoot(hit.object):null;
+ if(root){draggedBuild=root;selectedPlacedBuild=root;const anchor=hit.point||buildPlacementPoint(e).point;draggedBuild.userData.dragOffsetX=root.position.x-anchor.x;draggedBuild.userData.dragOffsetZ=root.position.z-anchor.z;setBuildStatus(`${root.userData.buildLabel}: перетаскивай предмет. Его можно перенести на верх другой постройки. R — повернуть, Delete — убрать.`);renderer.domElement.setPointerCapture?.(e.pointerId);}
+ else{selectedPlacedBuild=null;setBuildStatus('Предмет не выбран. Выбери новый в панели или перетащи установленный.');}
+}
+function moveBuildPointer(e){
+ if(!buildMode)return;
+ if(ghostBuild){moveGhostTo(e);return;}
+ if(draggedBuild&&buildPointerDown){
+  const p=buildPlacementPoint(e,draggedBuild),nx=THREE.MathUtils.clamp(p.x+draggedBuild.userData.dragOffsetX,-108,108),nz=THREE.MathUtils.clamp(p.z+draggedBuild.userData.dragOffsetZ,-80,80),ny=p.surfaceY-(draggedBuild.userData.localMinY||0);
+  const blocker=placementBlocker(draggedBuild,nx,ny,nz,p.supportRoot,draggedBuild);
+  if(blocker){setBuildStatus(blocker==='player'?'Нельзя переместить предмет в тело петушка.':'Предмет упирается в другую постройку. Попробуй поставить его выше или рядом.');return;}
+  draggedBuild.position.set(nx,ny,nz);
+ }
+}
+function endBuildPointer(e){buildPointerDown=false;draggedBuild=null;try{renderer.domElement.releasePointerCapture?.(e.pointerId);}catch(_){} }
+blocksToggle.addEventListener('click',()=>setBuildMode(!buildMode));
+document.getElementById('buildClose').addEventListener('click',()=>setBuildMode(false));
+renderBuildCatalog();
+buildItemsEl.addEventListener('click',e=>{const b=e.target.closest('[data-build-item]');if(b)selectBuildItem(b.dataset.buildItem);});
+renderer.domElement.addEventListener('pointerdown',beginBuildPointer);
+renderer.domElement.addEventListener('pointerdown',e=>{if(matchMedia('(pointer:fine)').matches&&e.button===0&&!buildMode&&inGame)cgFire();});
+renderer.domElement.addEventListener('click',()=>{if(inGame&&!buildMode&&matchMedia('(pointer:fine)').matches&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.();});
+renderer.domElement.addEventListener('pointermove',moveBuildPointer);
+renderer.domElement.addEventListener('pointerup',endBuildPointer);
+renderer.domElement.addEventListener('pointercancel',endBuildPointer);
+buildRotateBtn.addEventListener('click',()=>{const target=ghostBuild||selectedPlacedBuild;if(!target){setBuildStatus('Сначала выбери или поставь предмет.');return;}target.rotation.y+=Math.PI/2;if(ghostBuild)buildYaw=target.rotation.y;});
+buildDeleteBtn.addEventListener('click',()=>{if(selectedPlacedBuild){scene.remove(selectedPlacedBuild);const i=buildObjects.indexOf(selectedPlacedBuild);if(i>=0)buildObjects.splice(i,1);selectedPlacedBuild=null;setBuildStatus('Предмет удалён.');}else if(ghostBuild){cancelBuildSelection();}else setBuildStatus('Сначала выбери установленный предмет.');});
+function subHeader(title,subtitle,right=''){return `<div class="sub-head"><button class="back-btn" data-back>← НАЗАД</button><div><h2 class="sub-title">${title}</h2><p class="sub-subtitle">${subtitle}</p></div>${right}</div>`;}
+function openPlay(){mainMenu.classList.add('menu-hidden');subview.classList.remove('menu-hidden');subview.innerHTML=`${subHeader('ВЫБОР КАРТЫ','Выбери городскую арену и начинай матч.')}<div class="sub-card map-card"><div class="map-preview"></div><div class="map-info"><span class="status-pill">ДОСТУПНА</span><h3>TOWN 3F</h3><p>Большая городская карта по твоему скриншоту: широкие дороги, перекрёстки, жилые кварталы, магазины, дворы, машины и склад с контейнерами.</p><div class="map-tags"><span>3D · FPS</span><span>Большой город</span><span>Дворы</span><span>Складской район</span></div><button class="action-btn" id="launchMap">ИГРАТЬ НА TOWN 3F ↗</button></div></div>`;document.getElementById('launchMap').addEventListener('click',startGame);}
+const shopItems=[{id:'goldComb',icon:'👑',name:'Золотой гребень',desc:'Яркий золотой гребень для твоего петушка.',price:400,apply:()=>mats.comb.color.setHex(0xe6b52b)},{id:'blueFeathers',icon:'🪶',name:'Ледяные перья',desc:'Холодный голубой оттенок оперения.',price:650,apply:()=>mats.feather.color.setHex(0x91cce8)},{id:'coralWattle',icon:'💠',name:'Коралловый стиль',desc:'Насыщенный коралловый акцент персонажа.',price:300,apply:()=>mats.pink.color.setHex(0xff8274)}];
+function openShop(){mainMenu.classList.add('menu-hidden');subview.classList.remove('menu-hidden');renderShop();}
+function renderShop(){subview.innerHTML=`${subHeader('МАГАЗИН','Демо-магазин косметики. Покупки работают только в этой вкладке.',`<div class="currency">🪙 <b>${demoCoins}</b></div>`)}<div class="shop-grid">${shopItems.map(item=>`<article class="shop-item"><div class="cosmetic-icon">${item.icon}</div><div><h3>${item.name}</h3><p>${item.desc}</p><div class="shop-price">🪙 ${item.price}</div></div><button class="shop-buy" data-buy="${item.id}">${ownedCosmetics.has(item.id)?'КУПЛЕНО · ПРИМЕНИТЬ':'КУПИТЬ'}</button></article>`).join('')}</div><div class="server-note">Это внутриигровые демо-монеты. Реальных платежей нет; покупки сбрасываются после перезагрузки страницы.</div>`;subview.querySelectorAll('[data-buy]').forEach(btn=>btn.addEventListener('click',()=>{const item=shopItems.find(x=>x.id===btn.dataset.buy);if(!item)return;if(!ownedCosmetics.has(item.id)){if(demoCoins<item.price){flash('Не хватает демо-монет');return;}demoCoins-=item.price;ownedCosmetics.add(item.id);}item.apply();flash(`${item.name}: применено`);renderShop();}));}
+function openServers(){mainMenu.classList.add('menu-hidden');subview.classList.remove('menu-hidden');subview.innerHTML=`${subHeader('ОНЛАЙН-СЕРВЕРЫ','Настоящие комнаты · WebSocket · до 8 игроков')}<div class="sub-card" style="margin-bottom:14px"><div style="font-size:11px;font-weight:900;letter-spacing:.1em;color:#eaffd2">ТВОЙ НИКНЕЙМ</div><input id="cgNick" class="cg-room-input" maxlength="18" value="${cgEscape((()=>{try{return localStorage.getItem('cg_nick')||'Игрок'+Math.floor(100+Math.random()*900)}catch(_){return 'Игрок'+Math.floor(100+Math.random()*900)}})())}" placeholder="Например, Петух123"><div class="cg-room-tools"><button class="action-btn" id="cgCreateRoom">＋ СОЗДАТЬ КОМНАТУ</button><button class="action-btn" id="cgRefreshRooms">↻ ОБНОВИТЬ</button></div></div><div id="cgRooms" class="servers-list"></div><div class="server-note">Комнаты и число игроков загружаются с настоящего сервера. Первый публичный сервер TOWN 3F создаётся автоматически. Максимум 8 игроков в комнате.</div>`;document.getElementById('cgCreateRoom').addEventListener('click',cgCreateRoom);document.getElementById('cgRefreshRooms').addEventListener('click',cgLoadRooms);const ni=document.getElementById('cgNick');ni.addEventListener('change',()=>{try{localStorage.setItem('cg_nick',ni.value.trim().slice(0,18));}catch(_){}});cgLoadRooms();}
+document.querySelectorAll('[data-menu]').forEach(btn=>btn.addEventListener('click',()=>{const page=btn.dataset.menu;if(page==='play')openPlay();else if(page==='shop')openShop();else if(page==='servers')openServers();}));
+subview.addEventListener('click',e=>{if(e.target.closest('[data-back]')){subview.classList.add('menu-hidden');mainMenu.classList.remove('menu-hidden');}});
+document.getElementById('view').addEventListener('click',setView);
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;if(!locked&&inGame)mount.style.pointerEvents='auto';});
+document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.00225;pitch-=e.movementY*.0019;pitch=Math.max(-1.42,Math.min(1.42,pitch));});
+let touchLook=null;renderer.domElement.addEventListener('touchstart',e=>{if(start.style.display!=='none'||!e.touches.length)return;touchLook={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(!touchLook||!e.touches.length)return;const t=e.touches[0];yaw-=(t.clientX-touchLook.x)*.006;pitch-=(t.clientY-touchLook.y)*.005;pitch=Math.max(-1.42,Math.min(1.42,pitch));touchLook={x:t.clientX,y:t.clientY};},{passive:true});renderer.domElement.addEventListener('touchend',()=>touchLook=null,{passive:true});
+document.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&inGame){e.preventDefault();keys.KeyF=false;setBuildMode(!buildMode);return;}keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat&&!buildMode)interactDoor();if(e.code==='Space'&&!buildMode){e.preventDefault();if(grounded){vertical=7.2;grounded=false;}}if(e.code==='KeyV'&&!e.repeat&&!buildMode)setView();if(e.code==='KeyR'&&!e.repeat&&buildMode){const target=ghostBuild||selectedPlacedBuild;if(target){target.rotation.y+=Math.PI/2;if(ghostBuild)buildYaw=target.rotation.y;}}if(e.code==='Delete'&&buildMode&&selectedPlacedBuild){scene.remove(selectedPlacedBuild);const i=buildObjects.indexOf(selectedPlacedBuild);if(i>=0)buildObjects.splice(i,1);selectedPlacedBuild=null;setBuildStatus('Предмет удалён.');}if(e.code==='Escape'){if(buildMode){setBuildMode(false);}else{if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();if(inGame)showMainMenu();}}});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+// Mobile touch controls
+for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;const on=e=>{e.preventDefault();keys[k]=true;};const off=e=>{e.preventDefault();keys[k]=false;};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off);}
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();if(grounded){vertical=7.2;grounded=false;}});
+document.getElementById('useDoor').addEventListener('pointerdown',e=>{e.preventDefault();interactDoor();});
+document.getElementById('shootMobile').addEventListener('pointerdown',e=>{e.preventDefault();cgFire();});
+
+function blocked(x,z){const r=.43;
+ for(const c of colliders){const qx=Math.max(c.x-c.w/2-r,Math.min(x,c.x+c.w/2+r));const qz=Math.max(c.z-c.d/2-r,Math.min(z,c.z+c.d/2+r));if((x-qx)**2+(z-qz)**2<r*r)return true;}
+ // Placed props block the player only where their vertical volume overlaps the
+ // player's body. A shelf or platform several metres above the ground no longer
+ // creates an invisible wall at floor level.
+ for(const obj of buildObjects){
+  const size=obj.userData.collisionSize;if(!size)continue;
+  const vr=buildVerticalRange(obj),playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
+  if(vr.max<=playerBottom+.04||vr.min>=playerTop-.04)continue;
+  const dx=x-obj.position.x,dz=z-obj.position.z,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
+  const lx=co*dx-si*dz,lz=si*dx+co*dz,ox=Math.max(Math.abs(lx)-size.w/2,0),oz=Math.max(Math.abs(lz)-size.d/2,0);
+  if(ox*ox+oz*oz<r*r)return true;
+ }
+ for(const d of doors){if(d.kind==='hinge'){const dx=x-d.hingeX,dz=z-d.hingeZ,c=Math.cos(d.angle),sn=Math.sin(d.angle),lx=c*dx-sn*dz,lz=sn*dx+c*dz;if(lx> -r&&lx<d.width+r&&Math.abs(lz)<d.thickness/2+r)return true;}else if(d.value<.88&&Math.abs(x-d.worldX)<d.width/2+r&&Math.abs(z-d.worldZ)<.46)return true;}
+ return false;
+}
+function interactDoor(){let best=null,bestDist=3.35;for(const d of doors){const cx=d.kind==='hinge'?d.hingeX+Math.cos(d.angle)*d.width*.5:d.worldX;const cz=d.kind==='hinge'?d.hingeZ-Math.sin(d.angle)*d.width*.5:d.worldZ;const dist=Math.hypot(playerPos.x-cx,playerPos.z-cz);if(dist<bestDist){best=d;bestDist=dist;}}if(!best){flash('Подойди ближе к двери');return;}best.target=best.kind==='hinge'?(best.target>.5?0:1.42):(best.target>.5?0:1);flash(best.target?'Дверь открывается · E':'Дверь закрывается · E');}
+function updateDoors(dt){for(const d of doors){const rate=Math.min(1,dt*5.8);if(d.kind==='hinge'){d.angle+=(d.target-d.angle)*rate;if(Math.abs(d.target-d.angle)<.008)d.angle=d.target;d.root.rotation.y=d.angle;}else{d.value+=(d.target-d.value)*rate;if(Math.abs(d.target-d.value)<.008)d.value=d.target;d.root.position.y=d.baseY+d.openY*d.value;}}}
+function move(dx,dz){let nx=playerPos.x+dx,nz=playerPos.z+dz;if(!blocked(nx,playerPos.z))playerPos.x=nx;if(!blocked(playerPos.x,nz))playerPos.z=nz;playerPos.x=Math.max(-112,Math.min(112,playerPos.x));playerPos.z=Math.max(-84,Math.min(84,playerPos.z));}
+function update(dt){updateDoors(dt);if(buildMode){areaEl.textContent='РЕЖИМ СТРОИТЕЛЬСТВА';coordsEl.textContent=`${Math.round(playerPos.x)} · ${Math.round(playerPos.z)}`;return;}if(playerHp<=0){deathClock+=dt;if(deathClock>=4&&!respawnSent&&onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){respawnSent=true;try{onlineSocket.send(JSON.stringify({type:'respawn'}));}catch(_){respawnSent=false;}}return;}const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let speed=(keys.ShiftLeft||keys.ShiftRight?9.2:5.8);const len=Math.hypot(forward,strafe)||1;const f=forward/len,s=strafe/len;const fx=-Math.sin(yaw),fz=-Math.cos(yaw);const rx=Math.cos(yaw),rz=-Math.sin(yaw);move((fx*f+rx*s)*speed*dt,(fz*f+rz*s)*speed*dt);
+ vertical-=18*dt;playerPos.y+=vertical*dt;if(playerPos.y<=0){playerPos.y=0;vertical=0;grounded=true;}
+ const moving=Math.abs(forward)+Math.abs(strafe)>0;bob+=dt*(moving?12:2);const bobY=moving&&grounded?Math.sin(bob)*.045:0;
+ rooster.position.set(playerPos.x,playerPos.y,playerPos.z);rooster.rotation.y=yaw+Math.PI;rooster.userData.body.position.y=bobY;rooster.userData.body.rotation.z=moving&&grounded?Math.sin(bob*.5)*.025:0;
+ if(thirdPerson){const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));const target=new THREE.Vector3(playerPos.x,playerPos.y+2.15,playerPos.z);const desired=target.clone().add(dir.clone().multiplyScalar(6.4)).add(new THREE.Vector3(0,2.2,0));camera.position.lerp(desired,1-Math.pow(.0001,dt));camera.lookAt(playerPos.x,playerPos.y+1.5,playerPos.z);}else{camera.position.set(playerPos.x,1.68+playerPos.y+bobY,playerPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);}
+ areaEl.textContent=Math.abs(playerPos.x)>82?'СКЛАДЫ И ПЕРИФЕРИЯ':(Math.abs(playerPos.z)>60?'ЖИЛЫЕ КВАРТАЛЫ':'ЦЕНТР TOWN 3F');coordsEl.textContent=`${Math.round(playerPos.x)} · ${Math.round(playerPos.z)}`;
+ if(onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){onlineSendClock+=dt;onlineIdleClock+=dt;if(onlineSendClock>=.30){onlineSendClock=0;const state={x:playerPos.x,y:playerPos.y,z:playerPos.z,yaw,thirdPerson,map:'town3f'};const prev=onlineLastSent;const moved=!prev||Math.hypot(state.x-prev.x,state.z-prev.z)>.14||Math.abs(state.y-prev.y)>.08||Math.abs(state.yaw-prev.yaw)>.055;if(moved||onlineIdleClock>=5){try{onlineSocket.send(JSON.stringify({type:'pos',...state}));onlineLastSent=state;onlineIdleClock=0;}catch(_){}}}}
+}
+function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(inGame){update(dt);cgUpdateRemotes(dt);cgOnlineStatus();if(playerBlaster.visible)playerBlaster.position.x=.39+(now<muzzleFlashUntil?-.025:0);renderer.render(scene,camera);}else{updateDoors(dt);renderer.clear();if(start.style.display!=='none')drawMenuRooster(now);}}requestAnimationFrame(animate);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.far=460;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resizePreview();});
+// Start facing into the map from the near edge.
+camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents='none';
+}
+</script>
+</body>
+</html>
