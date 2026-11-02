@@ -148,9 +148,9 @@ export class GameRoom extends DurableObject {
       if (hit) {
         hit.p.hp=Math.max(0,hit.p.hp-25); if(hit.p.hp===0) hit.p.deadAt=now;
         hit.ws.serializeAttachment(hit.p);
-        this.broadcast({type:"shot",shooterId:p.id,targetId:hit.p.id,targetHp:hit.p.hp,killed:hit.p.hp===0,at:now});
+        this.broadcast({type:"shot",shooterId:p.id,origin:{x:p.x,y:p.y+1.58,z:p.z},direction:dir,targetPosition:{x:hit.p.x,y:hit.p.y+1.2,z:hit.p.z},targetId:hit.p.id,targetHp:hit.p.hp,killed:hit.p.hp===0,at:now});
         this.broadcast({type:"players",players:this.players()});
-      } else this.broadcast({type:"shot",shooterId:p.id,targetId:null,at:now});
+      } else this.broadcast({type:"shot",shooterId:p.id,origin:{x:p.x,y:p.y+1.58,z:p.z},direction:dir,targetId:null,at:now});
       ws.serializeAttachment(p); return;
     }
     if (data.type === "respawn") {
