@@ -447,7 +447,7 @@ function sphere(parent,x,y,z,rx,ry,rz,material,seg=12){const key=[rx,ry,rz,seg].
 function addLabel(text,x,y,z){const c=document.createElement('canvas');c.width=384;c.height=72;const ctx=c.getContext('2d');ctx.fillStyle='rgba(24,29,27,.84)';ctx.fillRect(4,4,376,64);ctx.strokeStyle='rgba(240,229,199,.75)';ctx.lineWidth=3;ctx.strokeRect(4,4,376,64);ctx.font='bold 26px Arial';ctx.textAlign='center';ctx.fillStyle='#fff1d2';ctx.fillText(text,192,47);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(6.5,1.2),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));mesh.position.set(x,y,z);mesh.rotation.x=-.12;scene.add(mesh);return mesh;}
 function makePlane(w,d,x,y,z,material){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),material);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);mesh.receiveShadow=true;scene.add(mesh);return mesh;}
 
-const colliders=[];const doors=[];
+const colliders=[];const doors=[];const roofSupports=[];
 const PLAYER_RADIUS=.43,PLAYER_HEIGHT=1.72,PLAYER_GRAVITY=18,PLAYER_JUMP_SPEED=7.2;
 function addCollider(x,z,w,d,height=4.8,baseY=0){colliders.push({x,z,w,d,minY:baseY,maxY:baseY+height});}
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(232,178),mats.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;scene.add(ground);
@@ -467,7 +467,7 @@ function parkingLot(x,z,w=18,d=10){makePlane(w,d,x,.035,z,mats.asphalt);for(let 
 parkingLot(-96,-44,22,10);parkingLot(96,43,24,10);parkingLot(50,-44,22,10);
 
 function wallSeg(g,x,y,z,w,h,d,material=mats.wall){box(g,x,y,z,w,h,d,material);}
-function makeGableRoof(g,cx,cy,cz,w,depth,material=mats.roof){const ridge=cy+1.65,eave=cy+.12;const verts=[-w/2,eave,-depth/2,w/2,eave,-depth/2,0,ridge,-depth/2,-w/2,eave,depth/2,w/2,eave,depth/2,0,ridge,depth/2];const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,.5,1,0,0,.5,1,1,0],2));geo.setIndex([0,1,2,3,5,4,0,3,4,0,4,1,1,4,5,1,5,2]);geo.computeVertexNormals();const roofMat=new THREE.MeshStandardMaterial({color:material.color,map:material.map||null,roughness:.9,side:THREE.DoubleSide});const m=new THREE.Mesh(geo,roofMat);m.position.set(cx,0,cz);m.castShadow=false;m.receiveShadow=true;g.add(m);box(g,0,ridge,0,.12,.12,depth+.1,mats.dark,false);}
+function makeGableRoof(g,cx,cy,cz,w,depth,material=mats.roof){const ridge=cy+1.65,eave=cy+.12;const verts=[-w/2,eave,-depth/2,w/2,eave,-depth/2,0,ridge,-depth/2,-w/2,eave,depth/2,w/2,eave,depth/2,0,ridge,depth/2];const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,1,0,.5,1,0,0,.5,1,1,0],2));geo.setIndex([0,1,2,3,5,4,0,2,5,0,5,3,1,4,5,1,5,2]);geo.computeVertexNormals();const roofMat=new THREE.MeshStandardMaterial({color:material.color,map:material.map||null,roughness:.9,side:THREE.DoubleSide});const m=new THREE.Mesh(geo,roofMat);m.position.set(cx,0,cz);m.castShadow=false;m.receiveShadow=true;g.add(m);box(g,0,ridge,0,.12,.12,depth+.1,mats.dark,false);}
 function windowUnit(g,x,y,z,w=1.35,h=1.05){box(g,x,y,z,w,h,.11,mats.trim,false);box(g,x,y,z+.07,w-.18,h-.18,.055,mats.windowLight,false);box(g,x,y,z+.11,.065,h-.18,.035,mats.trim,false);box(g,x,y,z+.11,w-.18,.065,.035,mats.trim,false);box(g,x,y-h*.58,z+.08,w+.18,.12,.28,mats.wood2,false);}
 function townBuilding({x,z,w=22,d=18,h=4.2,style=0,name='МАГАЗИН',roof=mats.roof}){
  const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const t=.32,opening=Math.min(2.1,w*.18),side=(w-opening)/2;const wallMat=style%4===1?mats.wall2:(style%4===2?mats.white:mats.wall);const roofMat=style%4===1?mats.roof2:(style%4===2?mats.roofBlue:roof);
@@ -481,9 +481,23 @@ function townBuilding({x,z,w=22,d=18,h=4.2,style=0,name='МАГАЗИН',roof=ma
  const winCount=Math.max(1,Math.floor((w-4)/5));for(let i=0;i<winCount;i++){const wx=-w/2+3.1+i*((w-6.2)/Math.max(1,winCount-1));if(Math.abs(wx)<opening/2+1.3)continue;windowUnit(g,wx,2.55,d/2+.18,1.45,1.12);}
  for(const wx of [-w*.28,w*.28]){box(g,wx,2.35,-d/2-.18,1.5,1.05,.12,mats.trim,false);box(g,wx,2.35,-d/2-.25,1.3,.86,.05,mats.windowLight,false);}
  // Roof styles: flat parapets, tiled gables and industrial shed roofs.
- if(style%4===1){makeGableRoof(g,0,h,d/2-.02,w+.65,d+.55,roofMat);}else{box(g,0,h+.16,0,w+.65,.35,d+.65,roofMat,false);box(g,0,h+.36,0,w+.35,.12,d+.35,mats.dark,false);if(style%4===3){for(let i=-Math.floor(w/2)+1;i<w/2;i+=2.2)box(g,i,h+.42,0,.09,.09,d+.25,mats.metal,false);}}
- // Rooftop vents, tanks and air-conditioning units.
- box(g,-w*.28,h+.62,-d*.22,1.35,.62,1.0,mats.metal,false);box(g,-w*.28,h+.96,-d*.22,1.42,.08,1.05,mats.trim,false);if(style%3===0){cyl(g,w*.27,h+.78,-d*.2,.55,.55,.7,mats.metal,10);cyl(g,w*.27,h+1.16,-d*.2,.62,.62,.08,mats.dark,10);}
+ const isGable=style%4===1;
+ if(isGable){
+  makeGableRoof(g,0,h,d/2-.02,w+.65,d+.55,roofMat);
+  roofSupports.push({type:'gable',x,z,width:w+.65,depth:d+.55,eaveY:h+.12,ridgeY:h+1.65});
+ }else{
+  box(g,0,h+.16,0,w+.65,.35,d+.65,roofMat,false);
+  box(g,0,h+.36,0,w+.35,.12,d+.35,mats.dark,false);
+  roofSupports.push({type:'flat',x,z,width:w+.65,depth:d+.65,y:h+.335});
+  addCollider(x,z,w+.65,d+.65,.35,h);
+  if(style%4===3){for(let i=-Math.floor(w/2)+1;i<w/2;i+=2.2)box(g,i,h+.42,0,.09,.09,d+.25,mats.metal,false);}
+ }
+ // Put rooftop equipment on the actual roof surface instead of burying it in sloped roofs.
+ const roofYAt=(localX)=>isGable?(h+1.65-Math.min((w+.65)/2,Math.abs(localX))*((1.65-.12)/((w+.65)/2))):h+.335;
+ const ventX=-w*.28,ventZ=-d*.22,ventRoofY=roofYAt(ventX);
+ box(g,ventX,ventRoofY+.31,ventZ,1.35,.62,1.0,mats.metal,false);
+ box(g,ventX,ventRoofY+.66,ventZ,1.42,.08,1.05,mats.trim,false);
+ if(style%3===0){const tankX=w*.27,tankRoofY=roofYAt(tankX);cyl(g,tankX,tankRoofY+.35,-d*.2,.55,.55,.7,mats.metal,10);cyl(g,tankX,tankRoofY+.74,-d*.2,.62,.62,.08,mats.dark,10);}
  // Sidewalk step and a painted shop sign.
  box(g,0,.19,d/2+.85,Math.min(4.2,w*.4),.22,.95,mats.sidewalk,false);
  if(name){const c=document.createElement('canvas');c.width=256;c.height=64;const cx=c.getContext('2d');cx.fillStyle=['#f1a92f','#278dbd','#e75b50','#29995d'][style%4];cx.fillRect(0,0,256,64);cx.fillStyle='#fff0cf';cx.font='bold 25px Arial';cx.textAlign='center';cx.fillText(name.slice(0,15),128,41);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w*.56,6.2),1.55),new THREE.MeshBasicMaterial({map:tex,transparent:false}));sign.position.set(0,h*.68,d/2+.23);g.add(sign);}
@@ -502,7 +516,7 @@ for(let r=0;r<zLots.length;r++)for(let c=0;c<xLots.length;c++){
  buildingIndex++;
 }
 // Small annexes and service sheds tucked into selected courtyards.
-function smallShed(x,z,w=7,d=5,color=mats.roof2){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,0,.12,0,w,.24,d,mats.concrete,false);box(g,0,1.35,-d/2,w,2.7,.25,mats.wall2,false);box(g,-w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,-w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,0,2.85,0,w+.35,.35,d+.35,color,false);addCollider(x,z-d/2,w,.3,2.7);addCollider(x-w/2,z,.3,d,2.7);addCollider(x+w/2,z,.3,d,2.7);addCollider(x-w*.32,z+d/2,w*.36,.3,2.7);addCollider(x+w*.32,z+d/2,w*.36,.3,2.7);}
+function smallShed(x,z,w=7,d=5,color=mats.roof2){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,0,.12,0,w,.24,d,mats.concrete,false);box(g,0,1.35,-d/2,w,2.7,.25,mats.wall2,false);box(g,-w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,-w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,0,2.85,0,w+.35,.35,d+.35,color,false);roofSupports.push({type:'flat',x,z,width:w+.35,depth:d+.35,y:3.025});addCollider(x,z,w+.35,d+.35,.35,2.675);addCollider(x,z-d/2,w,.3,2.7);addCollider(x-w/2,z,.3,d,2.7);addCollider(x+w/2,z,.3,d,2.7);addCollider(x-w*.32,z+d/2,w*.36,.3,2.7);addCollider(x+w*.32,z+d/2,w*.36,.3,2.7);}
 smallShed(-91,-27,8,6);smallShed(-48,25,7,6);smallShed(44,-28,8,6);smallShed(91,27,8,6);
 
 // Industrial container yard and a stepped orange cargo stack, inspired by the reference screenshot.
@@ -982,9 +996,11 @@ function makeBuildObject(id){
   if(!o.geometry.boundingBox)return;
   const part=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld).applyMatrix4(inverseRoot);
   const sx=part.max.x-part.min.x,sy=part.max.y-part.min.y,sz=part.max.z-part.min.z;
-  // Ignore tiny screws, stitches and decorative specks; keep real legs, tops, walls and furniture panels.
-  if(sx<.075||sy<.075||sz<.075)return;
-  collisionParts.push({minX:part.min.x,maxX:part.max.x,minY:part.min.y,maxY:part.max.y,minZ:part.min.z,maxZ:part.max.z});
+  // Retain thin real panels and legs; skip only sub-centimetre decorative geometry.
+  if(sx<.025||sy<.025||sz<.025)return;
+  const roundGeometry=o.geometry.type==='SphereGeometry'||o.geometry.type==='CylinderGeometry';
+  const round=roundGeometry&&Math.abs(sx-sz)<=Math.max(sx,sz)*.15;
+  collisionParts.push({minX:part.min.x,maxX:part.max.x,minY:part.min.y,maxY:part.max.y,minZ:part.min.z,maxZ:part.max.z,shape:round?'round':'box',radius:Math.min(sx,sz)*.5});
  });
  // A table is open underneath: only its four legs and feet are solid.
  if(id==='table'){
@@ -1039,6 +1055,11 @@ function buildVerticalRange(obj,y=obj.position.y){return {min:y+(obj.userData.lo
 function buildPartHorizontalOverlap(obj,part,objectX,objectZ,playerX,playerZ){
  const dx=playerX-objectX,dz=playerZ-objectZ,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
  const localX=co*dx-si*dz,localZ=si*dx+co*dz;
+ if(part.shape==='round'){
+  const cx=(part.minX+part.maxX)*.5,cz=(part.minZ+part.maxZ)*.5;
+  const reach=part.radius+PLAYER_RADIUS;
+  return (localX-cx)**2+(localZ-cz)**2<reach*reach;
+ }
  const nearestX=Math.max(part.minX,Math.min(localX,part.maxX));
  const nearestZ=Math.max(part.minZ,Math.min(localZ,part.maxZ));
  const ex=localX-nearestX,ez=localZ-nearestZ;
@@ -1183,6 +1204,17 @@ function resolvePlayerVertical(previousFeetY,nextFeetY,nextVelocity,x=playerPos.
     const topY=obj.position.y+part.maxY;
     if(previousFeetY>=topY-.045&&nextFeetY<=topY+.015&&(landingY===null||topY>landingY))landingY=topY;
    }
+  }
+  // Static city roofs: flat roofs have a fixed top; gable roofs follow each sloped side.
+  for(const roof of roofSupports){
+   const localX=x-roof.x,localZ=z-roof.z;
+   if(Math.abs(localX)>roof.width/2+PLAYER_RADIUS||Math.abs(localZ)>roof.depth/2+PLAYER_RADIUS)continue;
+   let topY=roof.y;
+   if(roof.type==='gable'){
+    const slopeX=Math.min(roof.width/2,Math.abs(localX));
+    topY=roof.ridgeY-slopeX*(roof.ridgeY-roof.eaveY)/(roof.width/2);
+   }
+   if(previousFeetY>=topY-.045&&nextFeetY<=topY+.015&&(landingY===null||topY>landingY))landingY=topY;
   }
   if(landingY!==null)return {y:Math.max(0,landingY),velocity:0,grounded:true};
  }
