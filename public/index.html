@@ -375,6 +375,7 @@ if (!THREE || !webglAvailable) {
 const mount=document.getElementById('game');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x82d5f6);scene.fog=new THREE.Fog(0xa8e0f1,145,360);
 const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.08,460);
+scene.add(camera); // Required so the camera-mounted first-person blaster is rendered.
 const isTouchDevice=matchMedia('(pointer: coarse)').matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:isTouchDevice?'low-power':'high-performance',failIfMajorPerformanceCaveat:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouchDevice?1:1.35));renderer.setSize(innerWidth,innerHeight);
@@ -569,7 +570,7 @@ box(playerBlaster,0,.19,-.12,.12,.07,.13,blasterMaterials.glass,false,false);
 box(playerBlaster,0,.18,-.38,.13,.07,.11,blasterMaterials.yellow,false,false);
 const blasterLight=new THREE.PointLight(0x75e7d8,.45,2.2);blasterLight.position.set(0,.18,-.3);playerBlaster.add(blasterLight);
 const blasterFlash=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:0xffdf63,transparent:true,opacity:.95}));blasterFlash.name='blasterFlash';blasterFlash.position.set(0,.02,-.72);blasterFlash.visible=false;playerBlaster.add(blasterFlash);
-playerBlaster.position.set(.43,-.28,-.72);playerBlaster.scale.setScalar(isTouchDevice?1.24:1);playerBlaster.rotation.set(-.045,-.12,-.035);camera.add(playerBlaster);
+playerBlaster.position.set(.48,-.29,-.78);playerBlaster.scale.setScalar(isTouchDevice?1.42:1.12);playerBlaster.rotation.set(-.045,-.12,-.035);playerBlaster.renderOrder=999;playerBlaster.traverse(o=>{if(o.isMesh){o.renderOrder=999;if(o.material){o.material.depthTest=false;o.material.depthWrite=false;o.material.needsUpdate=true;}}});camera.add(playerBlaster);
 
 const rooster=makeRooster();rooster.scale.setScalar(.96);rooster.position.set(-78,0,45);scene.add(rooster);
 const roosterBlaster=playerBlaster.clone(true);roosterBlaster.scale.setScalar(.66);roosterBlaster.position.set(.78,1.03,.62);roosterBlaster.rotation.set(0,Math.PI,.1);rooster.bodyGroup.add(roosterBlaster);
@@ -965,6 +966,19 @@ function makeBuildObject(id){
  const localBounds=new THREE.Box3().setFromObject(g);
  g.userData.localMinY=Number.isFinite(localBounds.min.y)?localBounds.min.y:0;
  g.userData.localMaxY=Number.isFinite(localBounds.max.y)?localBounds.max.y:1;
+ const inverseRoot=g.matrixWorld.clone().invert();
+ const collisionParts=[];
+ g.traverse(o=>{
+  if(!o.isMesh||!o.geometry)return;
+  if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();
+  if(!o.geometry.boundingBox)return;
+  const part=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld).applyMatrix4(inverseRoot);
+  const sx=part.max.x-part.min.x,sy=part.max.y-part.min.y,sz=part.max.z-part.min.z;
+  // Ignore tiny screws, stitches and decorative specks; keep real legs, tops, walls and furniture panels.
+  if(sx<.075||sy<.075||sz<.075)return;
+  collisionParts.push({minX:part.min.x,maxX:part.max.x,minY:part.min.y,maxY:part.max.y,minZ:part.min.z,maxZ:part.max.z});
+ });
+ g.userData.collisionParts=collisionParts;
  return g;
 }
 function setBuildGhostStyle(g,ghost){g.traverse(o=>{if(o.isMesh&&o.material){o.material.transparent=ghost;o.material.opacity=ghost?.53:1;o.material.depthWrite=!ghost;o.material.needsUpdate=true;}});}
@@ -983,10 +997,9 @@ function buildPlacementPoint(e,excludeRoot=null){
  const candidates=buildObjects.filter(o=>o!==excludeRoot);
  const hits=candidates.length?buildRaycaster.intersectObjects(candidates,true):[];
  let supportHit=null,supportRoot=null;
- // The nearest visible surface must face upward. Side faces are not valid supports.
- if(hits.length&&hitTopSurface(hits[0])){
-  supportHit=hits[0];supportRoot=findBuildRoot(supportHit.object);
- }
+ // Find the nearest upward-facing surface; a nearer side face must not hide a usable tabletop.
+ const topHit=hits.find(hitTopSurface);
+ if(topHit){supportHit=topHit;supportRoot=findBuildRoot(topHit.object);}
  const point=new THREE.Vector3();
  if(supportHit){point.copy(supportHit.point);}
  else if(!buildRaycaster.ray.intersectPlane(buildGroundPlane,point)){
@@ -1004,38 +1017,47 @@ function moveGhostTo(e){if(!ghostBuild)return;const p=buildPlacementPoint(e);gho
 function selectBuildItem(id){if(selectedBuildId===id&&ghostBuild){cancelBuildSelection();return;}if(ghostBuild)scene.remove(ghostBuild);selectedBuildId=id;selectedPlacedBuild=null;draggedBuild=null;buildYaw=0;ghostBuild=makeBuildObject(id);setBuildGhostStyle(ghostBuild,true);scene.add(ghostBuild);const dirX=-Math.sin(yaw),dirZ=-Math.cos(yaw);ghostBuild.position.set(playerPos.x+dirX*5,-(ghostBuild.userData.localMinY||0),playerPos.z+dirZ*5);ghostBuild.rotation.y=buildYaw;buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.toggle('selected',b.dataset.buildItem===id));const name=buildCatalog.find(v=>v.id===id)?.name||id;setBuildStatus(`${name}: перемести курсор и нажми на землю или верх предмета, чтобы поставить. R — поворот.`);buildHint.textContent='Клик по земле или предмету сверху — поставить · перетаскивание — двигать · R — повернуть · F — закрыть';buildHint.classList.add('show');}
 function findBuildRoot(obj){let n=obj;while(n&&n!==scene){if(n.userData?.buildItem)return n;n=n.parent;}return null;}
 function buildVerticalRange(obj,y=obj.position.y){return {min:y+(obj.userData.localMinY??0),max:y+(obj.userData.localMaxY??1)};}
-function buildFootprintHitsPlayer(obj,x,z,y=obj.position.y){
- const size=obj.userData.collisionSize;if(!size)return false;
- const vr=buildVerticalRange(obj,y),playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
- if(vr.max<=playerBottom+.04||vr.min>=playerTop-.04)return false;
+function buildPartPlayerOverlap(obj,part,x,z,y){
+ const playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
+ const partBottom=y+part.minY,partTop=y+part.maxY;
+ if(partTop<=playerBottom+.035||partBottom>=playerTop-.035)return false;
  const dx=playerPos.x-x,dz=playerPos.z-z,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
- const lx=co*dx-si*dz,lz=si*dx+co*dz,r=.58;
- const ox=Math.max(Math.abs(lx)-size.w/2,0),oz=Math.max(Math.abs(lz)-size.d/2,0);
- return ox*ox+oz*oz<r*r;
+ const localX=co*dx-si*dz,localZ=si*dx+co*dz,r=.43;
+ const nearestX=Math.max(part.minX,Math.min(localX,part.maxX));
+ const nearestZ=Math.max(part.minZ,Math.min(localZ,part.maxZ));
+ const ex=localX-nearestX,ez=localZ-nearestZ;
+ return ex*ex+ez*ez<r*r;
 }
-function footprintsOverlap(a,ax,az,ar,b,bx,bz,br){
- const as=a.userData.collisionSize,bs=b.userData.collisionSize;if(!as||!bs)return false;
- const axis=(angle,isX)=>isX?{x:Math.cos(angle),z:-Math.sin(angle)}:{x:Math.sin(angle),z:Math.cos(angle)};
- const axes=[axis(ar,true),axis(ar,false),axis(br,true),axis(br,false)];
- const dx=bx-ax,dz=bz-az;
- for(const v of axes){
-  const distance=Math.abs(dx*v.x+dz*v.z);
-  const aX=axis(ar,true),aZ=axis(ar,false),bX=axis(br,true),bZ=axis(br,false);
-  const ra=as.w*.5*Math.abs(aX.x*v.x+aX.z*v.z)+as.d*.5*Math.abs(aZ.x*v.x+aZ.z*v.z);
-  const rb=bs.w*.5*Math.abs(bX.x*v.x+bX.z*v.z)+bs.d*.5*Math.abs(bZ.x*v.x+bZ.z*v.z);
-  if(distance>=ra+rb-.025)return false;
+function buildFootprintHitsPlayer(obj,x,z,y=obj.position.y){
+ const parts=obj.userData.collisionParts||[];
+ for(const part of parts)if(buildPartPlayerOverlap(obj,part,x,z,y))return true;
+ return false;
+}
+function buildPartsWorldBoxes(obj,x,y,z,rotation){
+ const matrix=new THREE.Matrix4().compose(
+  new THREE.Vector3(x,y,z),
+  new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),rotation),
+  new THREE.Vector3(1,1,1)
+ );
+ return (obj.userData.collisionParts||[]).map(part=>{
+  const local=new THREE.Box3(new THREE.Vector3(part.minX,part.minY,part.minZ),new THREE.Vector3(part.maxX,part.maxY,part.maxZ));
+  return local.applyMatrix4(matrix);
+ });
+}
+function buildPartsOverlap(a,ax,ay,az,ar,b,bx,by,bz,br){
+ const boxesA=buildPartsWorldBoxes(a,ax,ay,az,ar),boxesB=buildPartsWorldBoxes(b,bx,by,bz,br);
+ for(const aa of boxesA)for(const bb of boxesB){
+  if(aa.max.x>bb.min.x+.035&&aa.min.x<bb.max.x-.035&&
+     aa.max.y>bb.min.y+.035&&aa.min.y<bb.max.y-.035&&
+     aa.max.z>bb.min.z+.035&&aa.min.z<bb.max.z-.035)return true;
  }
- return true;
+ return false;
 }
 function placementBlocker(obj,x,y,z,supportRoot=null,excludeRoot=null){
  if(buildFootprintHitsPlayer(obj,x,z,y))return 'player';
- const candidateY=buildVerticalRange(obj,y);
  for(const other of buildObjects){
   if(other===supportRoot||other===excludeRoot||other===obj)continue;
-  const otherY=buildVerticalRange(other);
-  const verticalOverlap=Math.min(candidateY.max,otherY.max)-Math.max(candidateY.min,otherY.min);
-  if(verticalOverlap<=.04)continue; // touching top faces is allowed; actual stacking is supported
-  if(footprintsOverlap(obj,x,z,obj.rotation.y,other,other.position.x,other.position.z,other.rotation.y))return other;
+  if(buildPartsOverlap(obj,x,y,z,obj.rotation.y,other,other.position.x,other.position.y,other.position.z,other.rotation.y))return other;
  }
  return null;
 }
@@ -1107,12 +1129,7 @@ function blocked(x,z){const r=.43;
  // player's body. A shelf or platform several metres above the ground no longer
  // creates an invisible wall at floor level.
  for(const obj of buildObjects){
-  const size=obj.userData.collisionSize;if(!size)continue;
-  const vr=buildVerticalRange(obj),playerBottom=playerPos.y,playerTop=playerPos.y+1.72;
-  if(vr.max<=playerBottom+.04||vr.min>=playerTop-.04)continue;
-  const dx=x-obj.position.x,dz=z-obj.position.z,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
-  const lx=co*dx-si*dz,lz=si*dx+co*dz,ox=Math.max(Math.abs(lx)-size.w/2,0),oz=Math.max(Math.abs(lz)-size.d/2,0);
-  if(ox*ox+oz*oz<r*r)return true;
+  if(buildFootprintHitsPlayer(obj,x,z,obj.position.y))return true;
  }
  for(const d of doors){if(d.kind==='hinge'){const dx=x-d.hingeX,dz=z-d.hingeZ,c=Math.cos(d.angle),sn=Math.sin(d.angle),lx=c*dx-sn*dz,lz=sn*dx+c*dz;if(lx> -r&&lx<d.width+r&&Math.abs(lz)<d.thickness/2+r)return true;}else if(d.value<.88&&Math.abs(x-d.worldX)<d.width/2+r&&Math.abs(z-d.worldZ)<.46)return true;}
  return false;
