@@ -1,0 +1,45 @@
+{
+  "name": "chicken-gun-online-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "build": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.16.1"
+  },
+  "build": {
+    "appId": "com.chickengun.online",
+    "productName": "CHICKEN GUN ONLINE",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
