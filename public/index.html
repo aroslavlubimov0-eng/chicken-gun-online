@@ -159,7 +159,30 @@ kbd{border:1px solid #fff;background:#ffcf43;color:#173044;box-shadow:0 2px 0 #8
 .cg-room-empty{padding:16px;border:1px dashed #eaffd16b;border-radius:12px;color:#eaffd2;font-size:12px;line-height:1.6}
 .cg-online-pill{display:inline-flex;align-items:center;gap:5px;color:#dcffbd;font-size:9px;font-weight:900;letter-spacing:.08em}
 @media(max-width:700px){#cgOnlineBadge{top:55px;right:10px}#cgOnlineChat{left:10px;bottom:94px;width:min(300px,calc(100vw - 20px))}}
-@media (pointer:coarse){#cgOnlineChat{left:10px;bottom:94px;width:min(300px,calc(100vw - 20px))}#mobile{display:flex}}
+/* Tablet / phone controls: large thumb-friendly arcade layout */
+@media (pointer:coarse){
+ #mobile{display:flex!important;left:12px;right:12px;bottom:max(14px,env(safe-area-inset-bottom));gap:12px;justify-content:space-between;align-items:flex-end;z-index:80;pointer-events:none}
+ .stick{grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:7px;pointer-events:auto}
+ .stick button,.mobile-actions button{width:58px;height:58px;border-radius:16px;border:2px solid rgba(234,255,218,.75);background:linear-gradient(160deg,rgba(31,62,48,.96),rgba(10,28,22,.96));color:#fff;font-size:25px;font-weight:1000;box-shadow:0 5px 0 rgba(0,0,0,.38);touch-action:none;user-select:none;-webkit-user-select:none}
+ .stick button:active,.mobile-actions button:active{transform:translateY(3px);filter:brightness(1.25);box-shadow:0 2px 0 rgba(0,0,0,.38)}
+ .mobile-actions{display:grid;grid-template-columns:repeat(2,minmax(74px,1fr));gap:8px;width:min(44vw,250px);max-width:250px;pointer-events:auto}
+ .mobile-actions button{width:100%;min-height:58px;padding:6px 8px;font-size:13px;line-height:1.1;white-space:normal}
+ .mobile-actions #shootMobile{grid-column:1/-1;min-height:78px;border:3px solid #fff;background:linear-gradient(180deg,#ff9976,#e43e46);font-size:21px;letter-spacing:.08em;box-shadow:0 6px 0 #922b33;touch-action:none}
+ .mobile-actions #jump{background:linear-gradient(180deg,#7bd8ff,#327ac7)}
+ .mobile-actions #view{background:linear-gradient(180deg,#c7ef72,#6aab32);color:#173b17}
+ .mobile-actions #useDoor{background:linear-gradient(180deg,#f4ce68,#b67a24)}
+ #cgOnlineChat{left:10px;top:68px;bottom:auto;width:min(310px,calc(100vw - 20px));gap:5px}
+ #cgOnlineMessages{max-height:78px;padding:7px;font-size:11px}
+ #cgOnlineChatInput{min-height:42px;font-size:16px}
+ #cgOnlineChatForm button{min-height:42px;font-size:11px}
+ #cgOnlineBadge{top:12px;right:10px}
+ #weaponHud{right:12px;bottom:205px;transform:none;padding:7px 10px}
+ #blocksToggle{left:10px;top:10px;padding:12px 15px;font-size:12px;min-height:46px}
+ #cgHp{left:140px;top:12px;width:120px}
+ #bottom{bottom:202px;left:10px}
+ #notice{top:52%;max-width:85vw;text-align:center;white-space:normal}
+}
+
 
 /* Minimal in-round HUD: only Blocks + health and an aiming reticle. */
 #blocksToggle{left:16px;top:16px;z-index:42}
@@ -545,10 +568,13 @@ box(playerBlaster,.19,.015,-.02,.08,.14,.22,blasterMaterials.orange,false,false)
 box(playerBlaster,0,.19,-.12,.12,.07,.13,blasterMaterials.glass,false,false);
 box(playerBlaster,0,.18,-.38,.13,.07,.11,blasterMaterials.yellow,false,false);
 const blasterLight=new THREE.PointLight(0x75e7d8,.45,2.2);blasterLight.position.set(0,.18,-.3);playerBlaster.add(blasterLight);
-const blasterFlash=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:0xffdf63,transparent:true,opacity:.95}));blasterFlash.position.set(0,.02,-.72);blasterFlash.visible=false;playerBlaster.add(blasterFlash);
-playerBlaster.position.set(.39,-.34,-.78);playerBlaster.rotation.set(-.045,-.12,-.035);camera.add(playerBlaster);
+const blasterFlash=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:0xffdf63,transparent:true,opacity:.95}));blasterFlash.name='blasterFlash';blasterFlash.position.set(0,.02,-.72);blasterFlash.visible=false;playerBlaster.add(blasterFlash);
+playerBlaster.position.set(.43,-.28,-.72);playerBlaster.scale.setScalar(isTouchDevice?1.24:1);playerBlaster.rotation.set(-.045,-.12,-.035);camera.add(playerBlaster);
 
 const rooster=makeRooster();rooster.scale.setScalar(.96);rooster.position.set(-78,0,45);scene.add(rooster);
+const roosterBlaster=playerBlaster.clone(true);roosterBlaster.scale.setScalar(.66);roosterBlaster.position.set(.78,1.03,.62);roosterBlaster.rotation.set(0,Math.PI,.1);rooster.userData.body.add(roosterBlaster);
+const roosterBlasterFlash=roosterBlaster.getObjectByName('blasterFlash');
+
 // The menu mascot is drawn on a tiny 2D canvas to avoid creating a second WebGL context.
 const previewMount=document.getElementById('roosterPreview');const previewCanvas=document.createElement('canvas');previewCanvas.setAttribute('aria-hidden','true');previewMount.appendChild(previewCanvas);const previewCtx=previewCanvas.getContext('2d');let previewRotation=0;
 function resizePreview(){const w=Math.max(1,previewMount.clientWidth),h=Math.max(1,previewMount.clientHeight),dpr=Math.min(devicePixelRatio||1,1.35);previewCanvas.width=Math.round(w*dpr);previewCanvas.height=Math.round(h*dpr);previewCanvas.style.width='100%';previewCanvas.style.height='100%';}
@@ -579,7 +605,7 @@ const startPos=new THREE.Vector3(-78,0,45);let playerPos=startPos.clone();let ya
 const start=document.getElementById('start');const mainMenu=document.getElementById('mainMenu');const subview=document.getElementById('subview');const areaEl=document.getElementById('area');const coordsEl=document.getElementById('coords');const modeEl=document.getElementById('mode');const notice=document.getElementById('notice');let noticeTimer;let inGame=false;let demoCoins=1200;const ownedCosmetics=new Set();
 // Online multiplayer state: positions, player presence and room chat are authoritative on Cloudflare Durable Objects.
 let onlineSocket=null, onlineRoomId=null, onlineRoomTitle='', onlinePlayerId=null, onlineSendClock=0, onlineIdleClock=0, onlineLastSent=null, onlinePlayerCount=0;
-let playerHp=100, deathClock=0, respawnSent=false, lastShotAt=0, muzzleFlashUntil=0;
+let playerHp=100, deathClock=0, respawnSent=false, lastShotAt=0, muzzleFlashUntil=0, weaponKick=0, playerIsMoving=false;
 const cgHp=document.getElementById('cgHp'), cgHpValue=document.getElementById('cgHpValue'), cgHpFill=document.getElementById('cgHpFill');
 function cgSetHp(value){playerHp=Math.max(0,Math.min(100,Number(value)||0));cgHpValue.textContent=String(Math.round(playerHp));cgHpFill.style.width=playerHp+'%';cgHp.classList.toggle('low',playerHp<=35);if(playerHp<=0){deathClock=0;respawnSent=false;}}
 const remotePlayers=new Map();
@@ -602,7 +628,11 @@ function cgFire(){
  if(!inGame||buildMode||playerHp<=0)return;
  if(!onlineSocket||onlineSocket.readyState!==WebSocket.OPEN){flash('Для перестрелок зайди на онлайн-сервер');return;}
  const now=performance.now();if(now-lastShotAt<320)return;lastShotAt=now;
- try{onlineSocket.send(JSON.stringify({type:'shoot',yaw,pitch}));muzzleFlashUntil=now+75;blasterFlash.visible=true;setTimeout(()=>{blasterFlash.visible=false;},70);}catch(_){flash('Не удалось выстрелить');}
+ weaponKick=1;
+ muzzleFlashUntil=now+115;
+ blasterFlash.visible=true;
+ if(roosterBlasterFlash)roosterBlasterFlash.visible=true;
+ try{onlineSocket.send(JSON.stringify({type:'shoot',yaw,pitch}));}catch(_){flash('Не удалось выстрелить');}
 }
 function cgHandleShot(m){
  if(m.origin&&m.direction)cgTracer(m.origin,m.direction,m.targetPosition||null);
@@ -623,9 +653,9 @@ async function cgCreateRoom(){const name=cgGetNick();try{const res=await fetch('
 function cgJoinRoom(roomId,title){if(onlineSocket){cgDisconnect(false);}const nick=cgGetNick();const proto=location.protocol==='https:'?'wss:':'ws:';const url=`${proto}//${location.host}/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(nick)}&client=${encodeURIComponent(cgGetClientId())}`;flash('Подключаюсь к '+title+'…');let ws,opened=false;try{ws=new WebSocket(url);onlineSocket=ws;}catch(e){flash('Не удалось открыть WebSocket');return;}ws.addEventListener('open',()=>{opened=true;onlineSocket=ws;onlineRoomId=roomId;onlineRoomTitle=title;onlineSendClock=0;onlineIdleClock=0;onlineLastSent=null;onlinePlayerCount=1;cgOnlineStatus();cgChatMessages.innerHTML='';cgChatLine('СИСТЕМА','Подключено к '+title,true);startGame();});ws.addEventListener('message',e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}if(m.type==='welcome'){onlinePlayerId=m.id;cgSetHp(m.hp??100);if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}cgSyncRemotePlayers(m.players||[]);cgChatLine('СИСТЕМА','Ты в комнате '+title,true);}else if(m.type==='players'){cgSyncRemotePlayers(m.players||[]);}else if(m.type==='shot'){cgHandleShot(m);}else if(m.type==='respawn'){cgSetHp(m.hp??100);deathClock=0;respawnSent=false;if(m.spawn){playerPos.set(Number(m.spawn.x)||-78,Number(m.spawn.y)||0,Number(m.spawn.z)||45);yaw=Number(m.spawn.yaw)||0;vertical=0;grounded=true;}flash('ВОЗРОЖДЕНИЕ!');}else if(m.type==='chat'){cgChatLine(m.name||'Игрок',m.text||'');}else if(m.type==='system'){cgChatLine('СИСТЕМА',m.text||'',true);}});ws.addEventListener('error',()=>{if(opened)flash('Ошибка связи с сервером.');});ws.addEventListener('close',e=>{if(onlineSocket===ws){onlineSocket=null;onlineRoomId=null;onlinePlayerId=null;for(const r of remotePlayers.values())scene.remove(r.model);remotePlayers.clear();onlinePlayerCount=0;cgOnlineStatus();if(!opened)flash('Не удалось войти: возможно, комната заполнена. Проверь подключение и попробуй снова.');else if(inGame)flash(e.code===4001?'Эта вкладка заменена другой вкладкой этого браузера':'Связь с сервером потеряна');}});}
 
 function flash(s){notice.textContent=s;notice.style.opacity=1;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.style.opacity=0,1400);}
-function setView(){thirdPerson=!thirdPerson;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;modeEl.textContent=thirdPerson?'TPS · CHICKEN GUN':'FPS · FIRST PERSON';flash(thirdPerson?'Вид от третьего лица':'Вид от первого лица');}
+function setView(){thirdPerson=!thirdPerson;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;roosterBlaster.visible=true;modeEl.textContent=thirdPerson?'TPS · CHICKEN GUN':'FPS · FIRST PERSON';flash(thirdPerson?'Вид от третьего лица · оружие в лапках':'Вид от первого лица · оружие на экране');}
 function showMainMenu(){inGame=false;document.body.classList.remove('match-clean');cgHp.style.display='none';cgDisconnect(false);setBuildMode(false);blocksToggle.style.display='none';buildPanel.classList.remove('open');start.style.display='block';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');subview.innerHTML='';mount.style.pointerEvents='none';if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();}
-function startGame(){inGame=true;document.body.classList.add('match-clean');cgHp.style.display='block';cgSetHp(100);deathClock=0;respawnSent=false;cgOnlineStatus();start.style.display='none';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');playerPos.copy(startPos);playerPos.y=0;vertical=0;grounded=true;yaw=0;pitch=-.04;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents='auto';blocksToggle.style.display='block';setBuildMode(false);if(matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.();}
+function startGame(){inGame=true;document.body.classList.add('match-clean');cgHp.style.display='block';cgSetHp(100);deathClock=0;respawnSent=false;cgOnlineStatus();start.style.display='none';mainMenu.classList.remove('menu-hidden');subview.classList.add('menu-hidden');playerPos.copy(startPos);playerPos.y=0;vertical=0;grounded=true;yaw=0;pitch=-.04;rooster.visible=thirdPerson;playerBlaster.visible=!thirdPerson;roosterBlaster.visible=true;camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents='auto';blocksToggle.style.display='block';setBuildMode(false);if(matchMedia('(pointer:fine)').matches)renderer.domElement.requestPointerLock?.();}
 
 // TOWN 3F build mode: place and drag modular walls, platforms and furniture.
 const blocksToggle=document.getElementById('blocksToggle');
@@ -1062,10 +1092,13 @@ let touchLook=null;renderer.domElement.addEventListener('touchstart',e=>{if(star
 document.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&inGame){e.preventDefault();keys.KeyF=false;setBuildMode(!buildMode);return;}keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat&&!buildMode)interactDoor();if(e.code==='Space'&&!buildMode){e.preventDefault();if(grounded){vertical=7.2;grounded=false;}}if(e.code==='KeyV'&&!e.repeat&&!buildMode)setView();if(e.code==='KeyR'&&!e.repeat&&buildMode){const target=ghostBuild||selectedPlacedBuild;if(target){target.rotation.y+=Math.PI/2;if(ghostBuild)buildYaw=target.rotation.y;}}if(e.code==='Delete'&&buildMode&&selectedPlacedBuild){scene.remove(selectedPlacedBuild);const i=buildObjects.indexOf(selectedPlacedBuild);if(i>=0)buildObjects.splice(i,1);selectedPlacedBuild=null;setBuildStatus('Предмет удалён.');}if(e.code==='Escape'){if(buildMode){setBuildMode(false);}else{if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();if(inGame)showMainMenu();}}});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 // Mobile touch controls
-for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;const on=e=>{e.preventDefault();keys[k]=true;};const off=e=>{e.preventDefault();keys[k]=false;};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off);}
+for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;const on=e=>{e.preventDefault();keys[k]=true;try{b.setPointerCapture(e.pointerId);}catch(_){}};const off=e=>{if(e.cancelable)e.preventDefault();keys[k]=false;};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);}
 document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();if(grounded){vertical=7.2;grounded=false;}});
 document.getElementById('useDoor').addEventListener('pointerdown',e=>{e.preventDefault();interactDoor();});
-document.getElementById('shootMobile').addEventListener('pointerdown',e=>{e.preventDefault();cgFire();});
+const shootMobile=document.getElementById('shootMobile');let mobileFireTimer=null;
+shootMobile.addEventListener('pointerdown',e=>{e.preventDefault();try{shootMobile.setPointerCapture(e.pointerId);}catch(_){}cgFire();if(mobileFireTimer)clearInterval(mobileFireTimer);mobileFireTimer=setInterval(()=>{if(inGame)cgFire();},345);});
+const stopMobileFire=()=>{if(mobileFireTimer){clearInterval(mobileFireTimer);mobileFireTimer=null;}};
+shootMobile.addEventListener('pointerup',stopMobileFire);shootMobile.addEventListener('pointercancel',stopMobileFire);shootMobile.addEventListener('lostpointercapture',stopMobileFire);shootMobile.addEventListener('pointerleave',stopMobileFire);
 
 function blocked(x,z){const r=.43;
  for(const c of colliders){const qx=Math.max(c.x-c.w/2-r,Math.min(x,c.x+c.w/2+r));const qz=Math.max(c.z-c.d/2-r,Math.min(z,c.z+c.d/2+r));if((x-qx)**2+(z-qz)**2<r*r)return true;}
