@@ -85,7 +85,6 @@ export class GameRoom extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
     const id = url.pathname.split("/").filter(Boolean).at(-2) || "town3f-main";
-    const ipKey = request.headers.get("CF-Connecting-IP") || "";
     const clientId = String(url.searchParams.get("client") || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
     const openSockets = () => this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN);
     let sockets = openSockets();
@@ -102,13 +101,10 @@ export class GameRoom extends DurableObject {
       sockets = openSockets();
     }
 
-    // Limit simultaneous connections from one public IP as a second, basic anti-flood guard.
-    if (ipKey && sockets.filter(ws => {
-      try { return ws.deserializeAttachment()?.ipKey === ipKey; } catch { return false; }
-    }).length >= 4) return json({ error: "Слишком много подключений с одной сети. Закрой лишние вкладки." }, 429);
+    // Many friends can share one Wi-Fi address. The room-wide MAX_PLAYERS limit is enough.
 
     if (sockets.length >= MAX_PLAYERS) return json({ error: "Комната заполнена" }, 409);
-    const p = { id: crypto.randomUUID().slice(0, 8), roomId:id, clientId, ipKey, name:safeName(url.searchParams.get("name")), x:-78+(sockets.length%4)*2.8, y:0, z:45+Math.floor(sockets.length/4)*2.8, yaw:0, hp:100, lastShot:0, deadAt:0, lastChat:0 };
+    const p = { id: crypto.randomUUID().slice(0, 8), roomId:id, clientId, name:safeName(url.searchParams.get("name")), x:-78+(sockets.length%4)*2.8, y:0, z:45+Math.floor(sockets.length/4)*2.8, yaw:0, hp:100, lastShot:0, deadAt:0, lastChat:0 };
     const pair = new WebSocketPair(), client = pair[0], server = pair[1];
     server.serializeAttachment(p);
     this.ctx.acceptWebSocket(server);
