@@ -448,10 +448,11 @@ function addLabel(text,x,y,z){const c=document.createElement('canvas');c.width=3
 function makePlane(w,d,x,y,z,material){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),material);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);mesh.receiveShadow=true;scene.add(mesh);return mesh;}
 
 const colliders=[];const doors=[];
-function addCollider(x,z,w,d){colliders.push({x,z,w,d});}
+const PLAYER_RADIUS=.43,PLAYER_HEIGHT=1.72,PLAYER_GRAVITY=18,PLAYER_JUMP_SPEED=7.2;
+function addCollider(x,z,w,d,height=4.8,baseY=0){colliders.push({x,z,w,d,minY:baseY,maxY:baseY+height});}
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(232,178),mats.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.08;ground.receiveShadow=true;scene.add(ground);
 // Beige concrete perimeter walls and simple skyline beyond them.
-function boundary(){const h=4.8;box(scene,0,h/2,-87,230,h,1.35,mats.wall2,false);box(scene,0,h/2,87,230,h,1.35,mats.wall2,false);box(scene,-115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,0,h+.08,-87,230,.18,1.5,mats.trim,false);box(scene,0,h+.08,87,230,.18,1.5,mats.trim,false);box(scene,-115,h+.08,0,1.5,.18,176,mats.trim,false);box(scene,115,h+.08,0,1.5,.18,176,mats.trim,false);addCollider(0,-87,230,1.5);addCollider(0,87,230,1.5);addCollider(-115,0,1.5,176);addCollider(115,0,1.5,176);for(let x=-112;x<=112;x+=7){for(const z of [-87,87])box(scene,x,2.45,z,.22,4.95,1.5,mats.wall,false);}for(let z=-84;z<=84;z+=7){for(const x of [-115,115])box(scene,x,2.45,z,1.5,4.95,.22,mats.wall,false);}}
+function boundary(){const h=4.8;box(scene,0,h/2,-87,230,h,1.35,mats.wall2,false);box(scene,0,h/2,87,230,h,1.35,mats.wall2,false);box(scene,-115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,115,h/2,0,1.35,h,176,mats.wall2,false);box(scene,0,h+.08,-87,230,.18,1.5,mats.trim,false);box(scene,0,h+.08,87,230,.18,1.5,mats.trim,false);box(scene,-115,h+.08,0,1.5,.18,176,mats.trim,false);box(scene,115,h+.08,0,1.5,.18,176,mats.trim,false);addCollider(0,-87,230,1.5,h);addCollider(0,87,230,1.5,h);addCollider(-115,0,1.5,176,h);addCollider(115,0,1.5,176,h);for(let x=-112;x<=112;x+=7){for(const z of [-87,87])box(scene,x,2.45,z,.22,4.95,1.5,mats.wall,false);}for(let z=-84;z<=84;z+=7){for(const x of [-115,115])box(scene,x,2.45,z,1.5,4.95,.22,mats.wall,false);}}
 boundary();
 
 // A clear street grid with sidewalks, curbs, lane dashes and crosswalks.
@@ -487,7 +488,7 @@ function townBuilding({x,z,w=22,d=18,h=4.2,style=0,name='МАГАЗИН',roof=ma
  box(g,0,.19,d/2+.85,Math.min(4.2,w*.4),.22,.95,mats.sidewalk,false);
  if(name){const c=document.createElement('canvas');c.width=256;c.height=64;const cx=c.getContext('2d');cx.fillStyle=['#f1a92f','#278dbd','#e75b50','#29995d'][style%4];cx.fillRect(0,0,256,64);cx.fillStyle='#fff0cf';cx.font='bold 25px Arial';cx.textAlign='center';cx.fillText(name.slice(0,15),128,41);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w*.56,6.2),1.55),new THREE.MeshBasicMaterial({map:tex,transparent:false}));sign.position.set(0,h*.68,d/2+.23);g.add(sign);}
  // Wall-only collision leaves the entrance and interior passable.
- addCollider(x,z-d/2,w,t);addCollider(x-w/2,z,t,d);addCollider(x+w/2,z,t,d);addCollider(x-(opening/2+side/2),z+d/2,side,t);addCollider(x+(opening/2+side/2),z+d/2,side,t);
+ addCollider(x,z-d/2,w,t,h);addCollider(x-w/2,z,t,d,h);addCollider(x+w/2,z,t,d,h);addCollider(x-(opening/2+side/2),z+d/2,side,t,h);addCollider(x+(opening/2+side/2),z+d/2,side,t,h);
  return g;
 }
 
@@ -501,7 +502,7 @@ for(let r=0;r<zLots.length;r++)for(let c=0;c<xLots.length;c++){
  buildingIndex++;
 }
 // Small annexes and service sheds tucked into selected courtyards.
-function smallShed(x,z,w=7,d=5,color=mats.roof2){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,0,.12,0,w,.24,d,mats.concrete,false);box(g,0,1.35,-d/2,w,2.7,.25,mats.wall2,false);box(g,-w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,-w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,0,2.85,0,w+.35,.35,d+.35,color,false);addCollider(x,z-d/2,w,.3);addCollider(x-w/2,z,.3,d);addCollider(x+w/2,z,.3,d);addCollider(x-w*.32,z+d/2,w*.36,.3);addCollider(x+w*.32,z+d/2,w*.36,.3);}
+function smallShed(x,z,w=7,d=5,color=mats.roof2){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(g,0,.12,0,w,.24,d,mats.concrete,false);box(g,0,1.35,-d/2,w,2.7,.25,mats.wall2,false);box(g,-w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,w/2,1.35,0,.25,2.7,d,mats.wall2,false);box(g,-w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,w*.32,1.35,d/2,w*.36,2.7,.25,mats.wall2,false);box(g,0,2.85,0,w+.35,.35,d+.35,color,false);addCollider(x,z-d/2,w,.3,2.7);addCollider(x-w/2,z,.3,d,2.7);addCollider(x+w/2,z,.3,d,2.7);addCollider(x-w*.32,z+d/2,w*.36,.3,2.7);addCollider(x+w*.32,z+d/2,w*.36,.3,2.7);}
 smallShed(-91,-27,8,6);smallShed(-48,25,7,6);smallShed(44,-28,8,6);smallShed(91,27,8,6);
 
 // Industrial container yard and a stepped orange cargo stack, inspired by the reference screenshot.
@@ -996,6 +997,7 @@ function makeBuildObject(id){
  }else{
   g.userData.collisionParts=collisionParts;
  }
+ g.userData.supportParts=collisionParts;
  return g;
 }
 function setBuildGhostStyle(g,ghost){g.traverse(o=>{if(o.isMesh&&o.material){o.material.transparent=ghost;o.material.opacity=ghost?.53:1;o.material.depthWrite=!ghost;o.material.needsUpdate=true;}});}
@@ -1034,16 +1036,19 @@ function moveGhostTo(e){if(!ghostBuild)return;const p=buildPlacementPoint(e);gho
 function selectBuildItem(id){if(selectedBuildId===id&&ghostBuild){cancelBuildSelection();return;}if(ghostBuild)scene.remove(ghostBuild);selectedBuildId=id;selectedPlacedBuild=null;draggedBuild=null;buildYaw=0;ghostBuild=makeBuildObject(id);setBuildGhostStyle(ghostBuild,true);scene.add(ghostBuild);const dirX=-Math.sin(yaw),dirZ=-Math.cos(yaw);ghostBuild.position.set(playerPos.x+dirX*5,-(ghostBuild.userData.localMinY||0),playerPos.z+dirZ*5);ghostBuild.rotation.y=buildYaw;buildItemsEl.querySelectorAll('.build-item').forEach(b=>b.classList.toggle('selected',b.dataset.buildItem===id));const name=buildCatalog.find(v=>v.id===id)?.name||id;setBuildStatus(`${name}: перемести курсор и нажми на землю или верх предмета, чтобы поставить. R — поворот.`);buildHint.textContent='Клик по земле или предмету сверху — поставить · перетаскивание — двигать · R — повернуть · F — закрыть';buildHint.classList.add('show');}
 function findBuildRoot(obj){let n=obj;while(n&&n!==scene){if(n.userData?.buildItem)return n;n=n.parent;}return null;}
 function buildVerticalRange(obj,y=obj.position.y){return {min:y+(obj.userData.localMinY??0),max:y+(obj.userData.localMaxY??1)};}
-function buildPartPlayerOverlap(obj,part,objectX,objectZ,objectY,playerX,playerZ,playerY){
- const playerBottom=playerY,playerTop=playerY+1.72;
- const partBottom=objectY+part.minY,partTop=objectY+part.maxY;
- if(partTop<=playerBottom+.035||partBottom>=playerTop-.035)return false;
+function buildPartHorizontalOverlap(obj,part,objectX,objectZ,playerX,playerZ){
  const dx=playerX-objectX,dz=playerZ-objectZ,co=Math.cos(obj.rotation.y),si=Math.sin(obj.rotation.y);
- const localX=co*dx-si*dz,localZ=si*dx+co*dz,r=.43;
+ const localX=co*dx-si*dz,localZ=si*dx+co*dz;
  const nearestX=Math.max(part.minX,Math.min(localX,part.maxX));
  const nearestZ=Math.max(part.minZ,Math.min(localZ,part.maxZ));
  const ex=localX-nearestX,ez=localZ-nearestZ;
- return ex*ex+ez*ez<r*r;
+ return ex*ex+ez*ez<PLAYER_RADIUS*PLAYER_RADIUS;
+}
+function buildPartPlayerOverlap(obj,part,objectX,objectZ,objectY,playerX,playerZ,playerY){
+ const playerBottom=playerY,playerTop=playerY+PLAYER_HEIGHT;
+ const partBottom=objectY+part.minY,partTop=objectY+part.maxY;
+ return partTop>playerBottom+.035&&partBottom<playerTop-.035&&
+  buildPartHorizontalOverlap(obj,part,objectX,objectZ,playerX,playerZ);
 }
 function buildFootprintHitsPlayer(obj,x,z,y=obj.position.y){
  const parts=obj.userData.collisionParts||[];
@@ -1129,34 +1134,60 @@ document.getElementById('view').addEventListener('click',setView);
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;if(!locked&&inGame)mount.style.pointerEvents='auto';});
 document.addEventListener('mousemove',e=>{if(!locked)return;yaw-=e.movementX*.00225;pitch-=e.movementY*.0019;pitch=Math.max(-1.42,Math.min(1.42,pitch));});
 let touchLook=null;renderer.domElement.addEventListener('touchstart',e=>{if(start.style.display!=='none'||!e.touches.length)return;touchLook={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});renderer.domElement.addEventListener('touchmove',e=>{if(!touchLook||!e.touches.length)return;const t=e.touches[0];yaw-=(t.clientX-touchLook.x)*.006;pitch-=(t.clientY-touchLook.y)*.005;pitch=Math.max(-1.42,Math.min(1.42,pitch));touchLook={x:t.clientX,y:t.clientY};},{passive:true});renderer.domElement.addEventListener('touchend',()=>touchLook=null,{passive:true});
-document.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&inGame){e.preventDefault();keys.KeyF=false;setBuildMode(!buildMode);return;}keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat&&!buildMode)interactDoor();if(e.code==='Space'&&!buildMode){e.preventDefault();if(grounded){vertical=7.2;grounded=false;}}if(e.code==='KeyV'&&!e.repeat&&!buildMode)setView();if(e.code==='KeyR'&&!e.repeat&&buildMode){const target=ghostBuild||selectedPlacedBuild;if(target){target.rotation.y+=Math.PI/2;if(ghostBuild)buildYaw=target.rotation.y;}}if(e.code==='Delete'&&buildMode&&selectedPlacedBuild){scene.remove(selectedPlacedBuild);const i=buildObjects.indexOf(selectedPlacedBuild);if(i>=0)buildObjects.splice(i,1);selectedPlacedBuild=null;setBuildStatus('Предмет удалён.');}if(e.code==='Escape'){if(buildMode){setBuildMode(false);}else{if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();if(inGame)showMainMenu();}}});
+document.addEventListener('keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&inGame){e.preventDefault();keys.KeyF=false;setBuildMode(!buildMode);return;}keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat&&!buildMode)interactDoor();if(e.code==='Space'&&!buildMode){e.preventDefault();if(grounded){vertical=PLAYER_JUMP_SPEED;grounded=false;}}if(e.code==='KeyV'&&!e.repeat&&!buildMode)setView();if(e.code==='KeyR'&&!e.repeat&&buildMode){const target=ghostBuild||selectedPlacedBuild;if(target){target.rotation.y+=Math.PI/2;if(ghostBuild)buildYaw=target.rotation.y;}}if(e.code==='Delete'&&buildMode&&selectedPlacedBuild){scene.remove(selectedPlacedBuild);const i=buildObjects.indexOf(selectedPlacedBuild);if(i>=0)buildObjects.splice(i,1);selectedPlacedBuild=null;setBuildStatus('Предмет удалён.');}if(e.code==='Escape'){if(buildMode){setBuildMode(false);}else{if(document.pointerLockElement===renderer.domElement)document.exitPointerLock();if(inGame)showMainMenu();}}});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 // Mobile touch controls
 for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;const on=e=>{e.preventDefault();keys[k]=true;try{b.setPointerCapture(e.pointerId);}catch(_){}};const off=e=>{if(e.cancelable)e.preventDefault();keys[k]=false;};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);}
-document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();if(grounded){vertical=7.2;grounded=false;}});
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();if(grounded){vertical=PLAYER_JUMP_SPEED;grounded=false;}});
 document.getElementById('useDoor').addEventListener('pointerdown',e=>{e.preventDefault();interactDoor();});
 const shootMobile=document.getElementById('shootMobile');let mobileFireTimer=null;
 shootMobile.addEventListener('pointerdown',e=>{e.preventDefault();try{shootMobile.setPointerCapture(e.pointerId);}catch(_){}cgFire();if(mobileFireTimer)clearInterval(mobileFireTimer);mobileFireTimer=setInterval(()=>{if(inGame)cgFire();},345);});
 const stopMobileFire=()=>{if(mobileFireTimer){clearInterval(mobileFireTimer);mobileFireTimer=null;}};
 shootMobile.addEventListener('pointerup',stopMobileFire);shootMobile.addEventListener('pointercancel',stopMobileFire);shootMobile.addEventListener('lostpointercapture',stopMobileFire);shootMobile.addEventListener('pointerleave',stopMobileFire);
 
-function blocked(x,z){const r=.43;
- for(const c of colliders){const qx=Math.max(c.x-c.w/2-r,Math.min(x,c.x+c.w/2+r));const qz=Math.max(c.z-c.d/2-r,Math.min(z,c.z+c.d/2+r));if((x-qx)**2+(z-qz)**2<r*r)return true;}
- // Placed props block the player only where their vertical volume overlaps the
- // player's body. A shelf or platform several metres above the ground no longer
- // creates an invisible wall at floor level.
+function blocked(x,z,feetY=playerPos.y){
+ const headY=feetY+PLAYER_HEIGHT,r=PLAYER_RADIUS;
+ for(const c of colliders){
+  if(c.maxY<=feetY+.035||c.minY>=headY-.035)continue;
+  const qx=Math.max(c.x-c.w/2-r,Math.min(x,c.x+c.w/2+r));
+  const qz=Math.max(c.z-c.d/2-r,Math.min(z,c.z+c.d/2+r));
+  if((x-qx)**2+(z-qz)**2<r*r)return true;
+ }
  for(const obj of buildObjects){
   const parts=obj.userData.collisionParts||[];
   for(const part of parts){
-   if(buildPartPlayerOverlap(obj,part,obj.position.x,obj.position.z,obj.position.y,x,z,playerPos.y))return true;
+   if(buildPartPlayerOverlap(obj,part,obj.position.x,obj.position.z,obj.position.y,x,z,feetY))return true;
   }
  }
- for(const d of doors){if(d.kind==='hinge'){const dx=x-d.hingeX,dz=z-d.hingeZ,c=Math.cos(d.angle),sn=Math.sin(d.angle),lx=c*dx-sn*dz,lz=sn*dx+c*dz;if(lx> -r&&lx<d.width+r&&Math.abs(lz)<d.thickness/2+r)return true;}else if(d.value<.88&&Math.abs(x-d.worldX)<d.width/2+r&&Math.abs(z-d.worldZ)<.46)return true;}
+ for(const d of doors){
+  const doorBase=d.kind==='hinge'?0:(d.baseY||0),doorTop=doorBase+2.08;
+  if(doorTop<=feetY+.035||doorBase>=headY-.035)continue;
+  if(d.kind==='hinge'){
+   const dx=x-d.hingeX,dz=z-d.hingeZ,c=Math.cos(d.angle),sn=Math.sin(d.angle),lx=c*dx-sn*dz,lz=sn*dx+c*dz;
+   if(lx> -r&&lx<d.width+r&&Math.abs(lz)<d.thickness/2+r)return true;
+  }else if(d.value<.88&&Math.abs(x-d.worldX)<d.width/2+r&&Math.abs(z-d.worldZ)<.46)return true;
+ }
  return false;
 }
 function interactDoor(){let best=null,bestDist=3.35;for(const d of doors){const cx=d.kind==='hinge'?d.hingeX+Math.cos(d.angle)*d.width*.5:d.worldX;const cz=d.kind==='hinge'?d.hingeZ-Math.sin(d.angle)*d.width*.5:d.worldZ;const dist=Math.hypot(playerPos.x-cx,playerPos.z-cz);if(dist<bestDist){best=d;bestDist=dist;}}if(!best){flash('Подойди ближе к двери');return;}best.target=best.kind==='hinge'?(best.target>.5?0:1.42):(best.target>.5?0:1);flash(best.target?'Дверь открывается · E':'Дверь закрывается · E');}
 function updateDoors(dt){for(const d of doors){const rate=Math.min(1,dt*5.8);if(d.kind==='hinge'){d.angle+=(d.target-d.angle)*rate;if(Math.abs(d.target-d.angle)<.008)d.angle=d.target;d.root.rotation.y=d.angle;}else{d.value+=(d.target-d.value)*rate;if(Math.abs(d.target-d.value)<.008)d.value=d.target;d.root.position.y=d.baseY+d.openY*d.value;}}}
 function move(dx,dz){let nx=playerPos.x+dx,nz=playerPos.z+dz;if(!blocked(nx,playerPos.z))playerPos.x=nx;if(!blocked(playerPos.x,nz))playerPos.z=nz;playerPos.x=Math.max(-112,Math.min(112,playerPos.x));playerPos.z=Math.max(-84,Math.min(84,playerPos.z));}
+function resolvePlayerVertical(previousFeetY,nextFeetY,nextVelocity,x=playerPos.x,z=playerPos.z){
+ let landingY=null;
+ if(nextVelocity<=0){
+  if(previousFeetY>=-.035&&nextFeetY<=0)landingY=0;
+  for(const obj of buildObjects){
+   const supports=obj.userData.supportParts||obj.userData.collisionParts||[];
+   for(const part of supports){
+    if(!buildPartHorizontalOverlap(obj,part,obj.position.x,obj.position.z,x,z))continue;
+    const topY=obj.position.y+part.maxY;
+    if(previousFeetY>=topY-.045&&nextFeetY<=topY+.015&&(landingY===null||topY>landingY))landingY=topY;
+   }
+  }
+  if(landingY!==null)return {y:Math.max(0,landingY),velocity:0,grounded:true};
+ }
+ return {y:Math.max(0,nextFeetY),velocity:nextFeetY<=0&&nextVelocity<=0?0:nextVelocity,grounded:false};
+}
 function update(dt){
  updateDoors(dt);
  if(playerHp<=0){
@@ -1164,7 +1195,15 @@ function update(dt){
   if(deathClock>=4&&!respawnSent&&onlineSocket&&onlineSocket.readyState===WebSocket.OPEN){respawnSent=true;try{onlineSocket.send(JSON.stringify({type:'respawn'}));}catch(_){respawnSent=false;}}
   return;
  }
- // Construction mode pauses walking, but gravity and camera updates must keep running.
+ // Resolve vertical motion first so the feet land exactly on the floor or an object top.
+ const previousFeetY=playerPos.y;
+ const nextVelocity=vertical-PLAYER_GRAVITY*dt;
+ const nextFeetY=previousFeetY+nextVelocity*dt;
+ const verticalResult=resolvePlayerVertical(previousFeetY,nextFeetY,nextVelocity);
+ playerPos.y=verticalResult.y;
+ vertical=verticalResult.velocity;
+ grounded=verticalResult.grounded;
+ // Horizontal collision uses the resolved feet height, not stale airborne coordinates.
  if(!buildMode){
   const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
@@ -1173,9 +1212,6 @@ function update(dt){
   const fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
   move((fx*f+rx*side)*speed*dt,(fz*f+rz*side)*speed*dt);
  }
- vertical-=18*dt;
- playerPos.y+=vertical*dt;
- if(playerPos.y<=0){playerPos.y=0;vertical=0;grounded=true;}
  const moving=!!(!buildMode&&(keys.KeyW||keys.ArrowUp||keys.KeyS||keys.ArrowDown||keys.KeyA||keys.ArrowLeft||keys.KeyD||keys.ArrowRight));
  playerIsMoving=moving&&grounded;
  bob+=dt*(playerIsMoving?12:2);
@@ -1186,7 +1222,12 @@ function update(dt){
  rooster.bodyGroup.position.y=bobY;
  rooster.bodyGroup.rotation.z=playerIsMoving?Math.sin(bob*.5)*.025:0;
  rooster.bodyGroup.rotation.x=playerIsMoving?Math.sin(bob)*.025:0;
- for(const limb of (rooster.roosterLegs||[])){const swing=playerIsMoving?Math.sin(bob+(limb.side>0?Math.PI:0))*.48:0;limb.leg.rotation.x=swing;limb.foot.rotation.x=-swing*.45;}
+ const airLegPose=grounded?0:(vertical>0?-.24:.2);
+ for(const limb of (rooster.roosterLegs||[])){
+  const swing=playerIsMoving?Math.sin(bob+(limb.side>0?Math.PI:0))*.42:airLegPose;
+  limb.leg.rotation.x=swing;
+  limb.foot.rotation.x=playerIsMoving?-swing*.4:(grounded?0:-airLegPose*.55);
+ }
  for(const wing of (rooster.roosterWings||[])){wing.mesh.rotation.z=wing.side*(-.12+(playerIsMoving?Math.sin(bob)*.09:0));}
  if(thirdPerson){
   const dir=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
