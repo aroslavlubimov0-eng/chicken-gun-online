@@ -159,6 +159,7 @@ kbd{border:1px solid #fff;background:#ffcf43;color:#173044;box-shadow:0 2px 0 #8
 .cg-room-empty{padding:16px;border:1px dashed #eaffd16b;border-radius:12px;color:#eaffd2;font-size:12px;line-height:1.6}
 .cg-online-pill{display:inline-flex;align-items:center;gap:5px;color:#dcffbd;font-size:9px;font-weight:900;letter-spacing:.08em}
 @media(max-width:700px){#cgOnlineBadge{top:55px;right:10px}#cgOnlineChat{left:10px;bottom:94px;width:min(300px,calc(100vw - 20px))}}
+@media (pointer:coarse){#cgOnlineChat{left:10px;bottom:94px;width:min(300px,calc(100vw - 20px))}#mobile{display:flex}}
 
 /* Minimal in-round HUD: only Blocks + health and an aiming reticle. */
 #blocksToggle{left:16px;top:16px;z-index:42}
@@ -351,9 +352,15 @@ if (!THREE || !webglAvailable) {
 const mount=document.getElementById('game');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x82d5f6);scene.fog=new THREE.Fog(0xa8e0f1,145,360);
 const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.08,460);
-const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.BasicShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
+const isTouchDevice=matchMedia('(pointer: coarse)').matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:isTouchDevice?'low-power':'high-performance',failIfMajorPerformanceCaveat:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouchDevice?1:1.35));renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=!isTouchDevice;renderer.shadowMap.type=THREE.BasicShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;mount.appendChild(renderer.domElement);
+renderer.domElement.style.touchAction='none';
+const mobileControls=document.getElementById('mobile');
+if(isTouchDevice&&mobileControls){mobileControls.style.display='flex';mobileControls.style.flexWrap='wrap';mobileControls.style.maxWidth='calc(100vw - 24px)';}
 scene.add(new THREE.HemisphereLight(0xe5faff,0x77834d,2.45));
-const sun=new THREE.DirectionalLight(0xffe18a,2.85);sun.position.set(-48,100,54);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-140;sun.shadow.camera.right=140;sun.shadow.camera.top=120;sun.shadow.camera.bottom=-120;sun.shadow.normalBias=.04;scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffe18a,2.85);sun.position.set(-48,100,54);sun.castShadow=!isTouchDevice;sun.shadow.mapSize.set(isTouchDevice?512:1024,isTouchDevice?512:1024);sun.shadow.camera.left=-140;sun.shadow.camera.right=140;sun.shadow.camera.top=120;sun.shadow.camera.bottom=-120;sun.shadow.normalBias=.04;scene.add(sun);
 
 const mats={};function mat(name,color,rough=.88,metal=0){return mats[name]=new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
 mat('grass',0x72bd42);mat('grass2',0x8bd14d);mat('earth',0xb18d58);mat('concrete',0xa8a99f);mat('wall',0xf0d8a9);mat('wall2',0xc98160);mat('dark',0x344655);mat('roof',0x4b6482);mat('roof2',0x3f81a5);mat('wood',0x9b6139);mat('wood2',0xc28649);mat('metal',0x6693a9,.52,.32);mat('glass',0x5aa9c6,.25,.18);mat('trim',0xffedc7);mat('greenwall',0x319842);mat('greenwall2',0x59b94a);mat('fence',0xa8bb55);mat('red',0xef514c);mat('white',0xfff7e6);mat('black',0x172c3a);mat('gold',0xffb72f);mat('pink',0xf27488);mat('comb',0xe63d45);mat('feather',0xffe8bb);mat('shadow',0x3b342b);
@@ -1132,7 +1139,7 @@ function update(dt){
 function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-lastTime)/1000);lastTime=now;if(inGame){update(dt);cgUpdateRemotes(dt);cgOnlineStatus();if(playerBlaster.visible)playerBlaster.position.x=.39+(now<muzzleFlashUntil?-.025:0);renderer.render(scene,camera);}else{updateDoors(dt);renderer.clear();if(start.style.display!=='none')drawMenuRooster(now);}}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.far=460;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);resizePreview();});
 // Start facing into the map from the near edge.
-camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents='none';
+camera.position.set(startPos.x,1.68,startPos.z);camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);mount.style.pointerEvents=isTouchDevice?'auto':'none';
 }
 </script>
 </body>
